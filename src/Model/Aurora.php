@@ -1,8 +1,9 @@
 <?php
 
-namespace Luma\DatabaseComponent;
+namespace Luma\DatabaseComponent\Model;
 
 use Luma\DatabaseComponent\Attributes\Column;
+use Luma\DatabaseComponent\DatabaseConnection;
 
 class Aurora
 {
@@ -72,7 +73,19 @@ class Aurora
                         continue;
                     }
 
-                    $property->setValue($result, $result->$columnName);
+                    $propertyType = $property->getType();
+
+                    if ($propertyType && !$propertyType->isBuiltin()) {
+                        /**
+                         * @var Aurora $associatedClassName
+                         */
+                        $associatedClassName = $propertyType->getName();
+                        $associatedObject = $associatedClassName::find($result->$columnName);
+                        $property->setValue($result, $associatedObject);
+                    } else {
+                        $property->setValue($result, $result->$columnName);
+                    }
+
                     unset($result->$columnName);
                 }
             }

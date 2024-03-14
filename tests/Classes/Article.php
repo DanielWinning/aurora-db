@@ -3,7 +3,7 @@
 namespace Luma\Tests\Classes;
 
 use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Aurora;
+use Luma\DatabaseComponent\Model\Aurora;
 
 class Article extends Aurora
 {
@@ -14,7 +14,7 @@ class Article extends Aurora
     private string $title;
 
     #[Column('intAuthorId')]
-    private int $intAuthorId;
+    private User $author;
 
     /**
      * @return string
@@ -25,10 +25,10 @@ class Article extends Aurora
     }
 
     /**
-     * @return int
+     * @return User
      */
-    public function getUserId(): int
+    public function getAuthor(): User
     {
-        return $this->intAuthorId;
+        return $this->author;
     }
 }

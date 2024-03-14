@@ -2,7 +2,7 @@
 
 namespace Luma\Tests\Unit;
 
-use Luma\DatabaseComponent\Aurora;
+use Luma\DatabaseComponent\Model\Aurora;
 use Luma\DatabaseComponent\DatabaseConnection;
 use Luma\Tests\Classes\Article;
 use Luma\Tests\Classes\AuroraExtension;
@@ -50,7 +50,7 @@ class AuroraTest extends TestCase
         $article = Article::find(1);
 
         $this->assertEquals('Test Article', $article->getTitle());
-        $this->assertEquals(1, $article->getUserId());
+        $this->assertEquals(1, $article->getAuthor()->getId());
 
         $article = Article::find(7);
 

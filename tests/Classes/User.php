@@ -2,7 +2,7 @@
 
 namespace Luma\Tests\Classes;
 
-use Luma\DatabaseComponent\Aurora;
+use Luma\DatabaseComponent\Model\Aurora;
 
 class User extends Aurora
 {
