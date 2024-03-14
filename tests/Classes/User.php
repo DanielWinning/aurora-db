@@ -2,14 +2,19 @@
 
 namespace Luma\Tests\Classes;
 
+use Luma\DatabaseComponent\Attributes\Column;
 use Luma\DatabaseComponent\Model\Aurora;
 
 class User extends Aurora
 {
     protected static ?string $identifier = 'intUserId';
     protected static ?string $schema = 'DatabaseComponentTest';
+
+    #[Column('intUserId')]
     private int $intUserId;
-    private string $strUsername;
+
+    #[Column('strUsername')]
+    private string $username;
 
     /**
      * @return int
@@ -24,6 +29,6 @@ class User extends Aurora
      */
     public function getUsername(): string
     {
-        return $this->strUsername;
+        return $this->username;
     }
 }
