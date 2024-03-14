@@ -1,6 +1,6 @@
 <?php
 
-namespace Luma\Tests;
+namespace Luma\Tests\Unit;
 
 use Luma\DatabaseComponent\DatabaseConnection;
 use PHPUnit\Framework\TestCase;
@@ -52,7 +52,7 @@ class DatabaseConnectionTest extends TestCase
     {
         // @todo Refactor this so it doesn't just work on my machine
         return new DatabaseConnection(
-            'mysql:host=localhost;port=45009;',
+            'mysql:host=localhost;port=19909;',
             'root',
             'docker'
         );

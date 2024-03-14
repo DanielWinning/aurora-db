@@ -18,6 +18,7 @@ class DatabaseConnection
     {
         try {
             $this->connection = new \PDO($dsn, $username, $password, $options);
+            $this->connection->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_NATURAL);
             $this->connection->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_CLASS);
         } catch (\PDOException $exception) {
             throw new \Exception($exception->getMessage());
