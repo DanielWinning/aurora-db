@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS DatabaseComponentTest.AuroraExtension;
 
 USE DatabaseComponentTest;
 
-DROP TABLE IF EXISTS AuroraExtension;
+DROP TABLE IF EXISTS AuroraExtension, User, Article;
 
 CREATE TABLE AuroraExtension (
     id int primary key auto_increment not null,
@@ -20,13 +20,14 @@ VALUES
 
 CREATE TABLE User (
     intUserId int primary key auto_increment not null,
-    strUsername varchar(60) not null
+    strUsername varchar(60) not null,
+    strEmailAddress varchar(255) not null
 );
 
 INSERT INTO User
-    (strUsername)
+    (strUsername, strEmailAddress)
 VALUES
-    ('Danny');
+    ('Danny', 'danny@test.com');
 
 CREATE TABLE Article (
     intArticleId int primary key auto_increment not null,

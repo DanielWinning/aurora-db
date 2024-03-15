@@ -3,12 +3,16 @@
 namespace Luma\Tests\Classes;
 
 use Luma\DatabaseComponent\Attributes\Column;
+use Luma\DatabaseComponent\Attributes\Identifier;
 use Luma\DatabaseComponent\Model\Aurora;
 
 class Article extends Aurora
 {
     protected static ?string $schema = 'DatabaseComponentTest';
-    protected static ?string $identifier = 'intArticleId';
+
+    #[Identifier]
+    #[Column('intArticleId')]
+    protected int $id;
 
     #[Column('strTitle')]
     private string $title;

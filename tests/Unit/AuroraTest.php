@@ -6,6 +6,8 @@ use Luma\DatabaseComponent\Model\Aurora;
 use Luma\DatabaseComponent\DatabaseConnection;
 use Luma\Tests\Classes\Article;
 use Luma\Tests\Classes\AuroraExtension;
+use Luma\Tests\Classes\InvalidAurora;
+use Luma\Tests\Classes\User;
 use PHPUnit\Framework\TestCase;
 
 class AuroraTest extends TestCase
@@ -55,5 +57,48 @@ class AuroraTest extends TestCase
         $article = Article::find(7);
 
         $this->assertNull($article);
+    }
+
+    /**
+     * @return User
+     */
+    public function testMake(): User
+    {
+        $connection = new DatabaseConnection(
+            'mysql:host=localhost;port=19909;',
+            'root',
+            'docker'
+        );
+        Aurora::setDatabaseConnection($connection);
+
+        $user = User::make([
+            'username' => 'Test User',
+        ]);
+
+        $this->assertInstanceOf(User::class, $user);
+        $this->assertEquals('Test User', $user->getUsername());
+
+        return $user;
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function testGetPrimaryIdentifier(): void
+    {
+        $connection = new DatabaseConnection(
+            'mysql:host=localhost;port=19909;',
+            'root',
+            'docker'
+        );
+        Aurora::setDatabaseConnection($connection);
+
+        $this->assertEquals('id', Article::getPrimaryIdentifierPropertyName());
+        $this->assertEquals('intArticleId', Article::getPrimaryIdentifierColumnName());
+
+        $this->expectException(\Exception::class);
+        InvalidAurora::getPrimaryIdentifierPropertyName();
     }
 }
