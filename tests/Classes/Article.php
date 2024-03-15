@@ -4,12 +4,12 @@ namespace Luma\Tests\Classes;
 
 use Luma\DatabaseComponent\Attributes\Column;
 use Luma\DatabaseComponent\Attributes\Identifier;
+use Luma\DatabaseComponent\Attributes\Schema;
 use Luma\DatabaseComponent\Model\Aurora;
 
+#[Schema('DatabaseComponentTest')]
 class Article extends Aurora
 {
-    protected static ?string $schema = 'DatabaseComponentTest';
-
     #[Identifier]
     #[Column('intArticleId')]
     protected int $id;

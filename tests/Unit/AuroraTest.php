@@ -12,10 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 class AuroraTest extends TestCase
 {
-    /**
-     * @return void
-     */
-    public function testItSetsConnection(): void
+    protected DatabaseConnection $connection;
+
+    protected function setUp(): void
     {
         $connection = new DatabaseConnection(
             'mysql:host=localhost;port=19909;',
@@ -24,11 +23,19 @@ class AuroraTest extends TestCase
         );
         Aurora::setDatabaseConnection($connection);
 
-        $this->assertEquals($connection, Aurora::getDatabaseConnection());
+        $this->connection = $connection;
+    }
+
+    /**
+     * @return void
+     */
+    public function testItSetsConnection(): void
+    {
+        $this->assertEquals($this->connection, Aurora::getDatabaseConnection());
 
         $extensionClass = new AuroraExtension();
 
-        $this->assertEquals($connection, $extensionClass::getDatabaseConnection());
+        $this->assertEquals($this->connection, $extensionClass::getDatabaseConnection());
     }
 
     /**
@@ -38,13 +45,6 @@ class AuroraTest extends TestCase
      */
     public function testFind(): void
     {
-        $connection = new DatabaseConnection(
-            'mysql:host=localhost;port=19909;',
-            'root',
-            'docker'
-        );
-        Aurora::setDatabaseConnection($connection);
-
         $extensionClass = AuroraExtension::find(1);
 
         $this->assertEquals('Extension One', $extensionClass->getName());
@@ -64,13 +64,6 @@ class AuroraTest extends TestCase
      */
     public function testMake(): User
     {
-        $connection = new DatabaseConnection(
-            'mysql:host=localhost;port=19909;',
-            'root',
-            'docker'
-        );
-        Aurora::setDatabaseConnection($connection);
-
         $user = User::make([
             'username' => 'Test User',
         ]);
@@ -88,17 +81,28 @@ class AuroraTest extends TestCase
      */
     public function testGetPrimaryIdentifier(): void
     {
-        $connection = new DatabaseConnection(
-            'mysql:host=localhost;port=19909;',
-            'root',
-            'docker'
-        );
-        Aurora::setDatabaseConnection($connection);
-
         $this->assertEquals('id', Article::getPrimaryIdentifierPropertyName());
         $this->assertEquals('intArticleId', Article::getPrimaryIdentifierColumnName());
 
         $this->expectException(\Exception::class);
         InvalidAurora::getPrimaryIdentifierPropertyName();
+    }
+
+    /**
+     * @return void
+     */
+    public function testGetSchema(): void
+    {
+        $this->assertEquals('DatabaseComponentTest', AuroraExtension::getSchema());
+        $this->assertEquals('DatabaseComponentTest', Article::getSchema());
+    }
+
+    /**
+     * @return void
+     */
+    public function testGetTable(): void
+    {
+        $this->assertEquals('AuroraExtension', AuroraExtension::getTable());
+        $this->assertEquals('Article', Article::getTable());
     }
 }

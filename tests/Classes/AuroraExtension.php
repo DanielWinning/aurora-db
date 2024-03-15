@@ -4,13 +4,14 @@ namespace Luma\Tests\Classes;
 
 use Luma\DatabaseComponent\Attributes\Column;
 use Luma\DatabaseComponent\Attributes\Identifier;
+use Luma\DatabaseComponent\Attributes\Schema;
+use Luma\DatabaseComponent\Attributes\Table;
 use Luma\DatabaseComponent\Model\Aurora;
 
+#[Schema('DatabaseComponentTest')]
+#[Table('AuroraExtension')]
 class AuroraExtension extends Aurora
 {
-    protected static ?string $schema = 'DatabaseComponentTest';
-    protected static ?string $table = 'AuroraExtension';
-
     #[Identifier]
     #[Column('id')]
     private int $id;

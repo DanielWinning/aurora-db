@@ -4,12 +4,12 @@ namespace Luma\DatabaseComponent\Model;
 
 use Luma\DatabaseComponent\Attributes\Column;
 use Luma\DatabaseComponent\Attributes\Identifier;
+use Luma\DatabaseComponent\Attributes\Schema;
+use Luma\DatabaseComponent\Attributes\Table;
 use Luma\DatabaseComponent\DatabaseConnection;
 
 class Aurora
 {
-    protected static ?string $schema = null;
-    protected static ?string $table = null;
     protected static ?DatabaseConnection $connection = null;
 
     /**
@@ -39,17 +39,7 @@ class Aurora
      */
     public static function find(int $id): ?self
     {
-        $className = explode('\\', static::class);
-        $className = end($className);
-
-        $query = static::getDatabaseConnection()->getConnection()->prepare(
-            sprintf(
-                "SELECT * FROM %s%s WHERE %s = :id",
-                static::$schema ? static::$schema . '.' : '',
-                static::$table ?? $className,
-                static::getPrimaryIdentifierColumnName()
-            )
-        );
+        $query = static::getDatabaseConnection()->getConnection()->prepare(static::getFindQueryString($id));
 
         $query->execute(['id' => $id]);
         $query->setFetchMode(\PDO::FETCH_CLASS, static::class);
@@ -97,6 +87,30 @@ class Aurora
     }
 
     /**
+     * @param int $id
+     * @return string
+     *
+     * @throws \Exception
+     */
+    private static function getFindQueryString(int $id): string
+    {
+        $schema = static::getSchema();
+        $table = static::getTable();
+
+        if ($schema !== '') {
+            $table = sprintf('%s.%s', $schema, $table);
+        }
+
+        return sprintf(
+            "SELECT * FROM %s WHERE %s = :id",
+            $table,
+            static::getPrimaryIdentifierColumnName()
+        );
+    }
+
+    /**
+     * Returns a new instance without saving.
+     *
      * @param array $data
      *
      * @return static
@@ -128,6 +142,9 @@ class Aurora
     }
 
     /**
+     * Returns the name of the primary identifier column as seen in the database. Set using the #[Identifier] attribute
+     * on your Aurora's primary key property. All Aurora models require an #[Identifier] attribute.
+     *
      * @return string
      *
      * @throws \Exception
@@ -166,6 +183,43 @@ class Aurora
         }
 
         throw new \Exception('Invalid entity. Classes extending Aurora must contain an #[Identifier] attribute to set the primary key.');
+    }
+
+    /**
+     * @return string
+     */
+    public static function getSchema(): string
+    {
+        return static::getClassAttribute(Schema::class, 'schema');
+    }
+
+    /**
+     * @return string
+     */
+    public static function getTable(): string
+    {
+        $table = static::getClassAttribute(Table::class, 'table');
+
+        if (empty($table)) {
+            $className = explode('\\', static::class);
+            $table = end($className);
+        }
+
+        return $table;
+    }
+
+    /**
+     * @param string $attributeFQCN
+     * @param string $propName
+     *
+     * @return string
+     */
+    private static function getClassAttribute(string $attributeFQCN, string $propName): string
+    {
+        $reflector = new \ReflectionClass(static::class);
+        $attributes = $reflector->getAttributes($attributeFQCN);
+
+        return $attributes ? $attributes[0]->newInstance()->$propName : '';
     }
 
 //    public function save()
