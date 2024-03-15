@@ -12,21 +12,13 @@ class User extends Aurora
 {
     #[Identifier]
     #[Column('intUserId')]
-    private int $id;
+    protected int $id;
 
     #[Column('strUsername')]
     private string $username;
 
     #[Column('strEmailAddress')]
     private string $strEmailAddress;
-
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
 
     /**
      * @return string
