@@ -13,6 +13,16 @@ class Aurora
     protected static ?DatabaseConnection $connection = null;
 
     /**
+     * @return int
+     *
+     * @throws \Exception
+     */
+    public function getId(): int
+    {
+        return $this->{static::getPrimaryIdentifierPropertyName()};
+    }
+
+    /**
      * @param DatabaseConnection $connection
      *
      * @return void
@@ -37,62 +47,67 @@ class Aurora
      *
      * @throws \Exception
      */
-    public static function find(int $id): ?self
+    public static function find(int $id): ?static
     {
-        $query = static::getDatabaseConnection()->getConnection()->prepare(static::getFindQueryString($id));
+        $aurora = static::executeQuery(static::getFindQueryString(), ['id' => $id]);
 
-        $query->execute(['id' => $id]);
+        return $aurora ? AuroraMapper::map($aurora) : null;
+    }
+
+    /**
+     * @return ?static
+     *
+     * @throws \Exception
+     */
+    public static function getLatest(): ?static
+    {
+        $sql = sprintf(
+            'SELECT * FROM %s ORDER BY %s DESC LIMIT 1',
+            static::getSchemaAndTableCombined(),
+            static::getPrimaryIdentifierColumnName()
+        );
+        $latest = static::executeQuery($sql);
+
+        return $latest ? AuroraMapper::map($latest) : null;
+    }
+
+    /**
+     * @param string $sql
+     * @param ?array $params
+     *
+     * @return ?static
+     */
+    private static function executeQuery(string $sql, array $params = null): ?static
+    {
+        $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $query->execute($params);
         $query->setFetchMode(\PDO::FETCH_CLASS, static::class);
 
         $result = $query->fetch();
 
-        if (!$result) {
-            return null;
-        }
-
-        try {
-            $reflector = new \ReflectionClass($result);
-
-            foreach ($reflector->getProperties() as $property) {
-                $attribute = $property->getAttributes(Column::class)[0] ?? null;
-
-                if ($attribute) {
-                    $columnName = $attribute->newInstance()->name;
-
-                    if ($columnName === $property->getName()) {
-                        continue;
-                    }
-
-                    $propertyType = $property->getType();
-
-                    if ($propertyType && !$propertyType->isBuiltin()) {
-                        /**
-                         * @var Aurora $associatedClassName
-                         */
-                        $associatedClassName = $propertyType->getName();
-                        $associatedObject = $associatedClassName::find($result->$columnName);
-                        $property->setValue($result, $associatedObject);
-                    } else {
-                        $property->setValue($result, $result->$columnName);
-                    }
-
-                    unset($result->$columnName);
-                }
-            }
-        } catch (\ReflectionException $exception) {
-            throw new \Exception($exception->getMessage());
-        }
+        if (!$result) return null;
 
         return $result;
     }
 
     /**
-     * @param int $id
      * @return string
      *
      * @throws \Exception
      */
-    private static function getFindQueryString(int $id): string
+    private static function getFindQueryString(): string
+    {
+        return sprintf(
+            "SELECT * FROM %s WHERE %s = :id",
+            static::getSchemaAndTableCombined(),
+            static::getPrimaryIdentifierColumnName()
+        );
+    }
+
+    /**
+     * @return string
+     */
+    private static function getSchemaAndTableCombined(): string
     {
         $schema = static::getSchema();
         $table = static::getTable();
@@ -101,11 +116,7 @@ class Aurora
             $table = sprintf('%s.%s', $schema, $table);
         }
 
-        return sprintf(
-            "SELECT * FROM %s WHERE %s = :id",
-            $table,
-            static::getPrimaryIdentifierColumnName()
-        );
+        return $table;
     }
 
     /**
@@ -222,16 +233,103 @@ class Aurora
         return $attributes ? $attributes[0]->newInstance()->$propName : '';
     }
 
-//    public function save()
-//    {
-//        $reflectionClass = new \ReflectionClass($this);
-//
-//        foreach ($reflectionClass->getProperties() as $property) {
-//            var_dump($property->getName());
-//
-//            if ($property->getName() !== self::$identifier) {
-//                var_dump($property->getValue($this));
-//            }
-//        }
-//    }
+    public function save()
+    {
+        if (isset($this->{static::getPrimaryIdentifierPropertyName()})) {
+            return $this->update();
+        } else {
+            return $this->insert();
+        }
+    }
+
+    /**
+     * @return static
+     *
+     * @throws \Exception
+     */
+    private function insert(): static
+    {
+        $reflector = new \ReflectionClass($this);
+
+        $columns = [];
+        $values = [];
+        $params = [];
+
+        foreach ($reflector->getProperties() as $property) {
+            $column = $property->getAttributes(Column::class)[0] ?? null;
+
+            if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
+                $columnName = $column->newInstance()->name;
+                $columns[] = $columnName;
+                $values[] = ':' . $columnName;
+
+                $value = $property->getValue($this);
+
+                if ($value instanceof Aurora) {
+                    $value = $value->getId();
+                }
+
+                $params[$columnName] = $value;
+            }
+        }
+
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            static::getSchemaAndTableCombined(),
+            implode(',', $columns),
+            implode(',', $values)
+        );
+
+        $query = static::$connection->getConnection()->prepare($sql);
+        $query->execute($params);
+
+        $this->{static::getPrimaryIdentifierPropertyName()}
+            = static::getDatabaseConnection()->getConnection()->lastInsertId();
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     *
+     * @throws \Exception
+     */
+    private function update(): static
+    {
+        $reflector = new \ReflectionClass($this);
+
+        $columns = [];
+        $params = [];
+
+        foreach ($reflector->getProperties() as $property) {
+            $column = $property->getAttributes(Column::class)[0] ?? null;
+
+            if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
+                $columnName = $column->newInstance()->name;
+                $columns[] = $columnName . ' = :' . $columnName;
+
+                $value = $property->getValue($this);
+
+                if ($value instanceof Aurora) {
+                    $value = $value->getId();
+                }
+
+                $params[$columnName] = $value;
+            }
+        }
+
+        $params['id'] = $this->getId();
+
+        $sql = sprintf(
+            'UPDATE %s SET %s WHERE %s = :id',
+            static::getSchemaAndTableCombined(),
+            implode(', ', $columns),
+            static::getPrimaryIdentifierColumnName()
+        );
+
+        $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $query->execute($params);
+
+        return $this;
+    }
 }

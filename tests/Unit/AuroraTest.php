@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 class AuroraTest extends TestCase
 {
+    private const INSERT_MESSAGE = 'Created by AuroraTest::testInsert';
+    private const UPDATE_MESSAGE = 'Updated by AuroraTest::testUpdate';
+
     protected DatabaseConnection $connection;
 
     protected function setUp(): void
@@ -54,7 +57,7 @@ class AuroraTest extends TestCase
         $this->assertEquals('Test Article', $article->getTitle());
         $this->assertEquals(1, $article->getAuthor()->getId());
 
-        $article = Article::find(7);
+        $article = Article::find(99999999);
 
         $this->assertNull($article);
     }
@@ -104,5 +107,53 @@ class AuroraTest extends TestCase
     {
         $this->assertEquals('AuroraExtension', AuroraExtension::getTable());
         $this->assertEquals('Article', Article::getTable());
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function testInsert(): void
+    {
+        $article = Article::make([
+            'title' => 'Created by AuroraTest::testInsert',
+            'author' => User::find(1),
+        ])->save();
+
+        $this->assertIsNumeric($article->getId());
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function testGetLatest(): void
+    {
+        $article = Article::getLatest();
+
+        $this->assertInstanceOf(Article::class, $article);
+        $this->assertIsNumeric($article->getId());
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function testUpdate(): void
+    {
+        $article = Article::getLatest();
+
+        $this->assertEquals(self::INSERT_MESSAGE, $article->getTitle());
+
+        $article->setTitle(self::UPDATE_MESSAGE);
+        $article->save();
+
+        // Get the article again to be certain we aren't just confirming the updated model
+        $freshArticle = Article::find($article->getId());
+
+        $this->assertEquals(self::UPDATE_MESSAGE, $freshArticle->getTitle());
     }
 }

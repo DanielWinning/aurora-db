@@ -29,6 +29,16 @@ class Article extends Aurora
     }
 
     /**
+     * @param string $title
+     *
+     * @return void
+     */
+    public function setTitle(string $title): void
+    {
+        $this->title = $title;
+    }
+
+    /**
      * @return User
      */
     public function getAuthor(): User

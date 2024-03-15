@@ -1,0 +1,54 @@
+<?php
+
+namespace Luma\DatabaseComponent\Model;
+
+use Luma\DatabaseComponent\Attributes\Column;
+
+class AuroraMapper
+{
+    /**
+     * Used internally to map PDO results to Aurora instances.
+     *
+     * @param Aurora $aurora
+     * @return Aurora
+     *
+     * @throws \Exception
+     */
+    public static function map(Aurora $aurora): Aurora
+    {
+        try {
+            $reflector = new \ReflectionClass($aurora);
+
+            foreach ($reflector->getProperties() as $property) {
+                $attribute = $property->getAttributes(Column::class)[0] ?? null;
+
+                if ($attribute) {
+                    $columnName = $attribute->newInstance()->name;
+
+                    if ($columnName === $property->getName()) {
+                        continue;
+                    }
+
+                    $propertyType = $property->getType();
+
+                    if ($propertyType && !$propertyType->isBuiltin()) {
+                        /**
+                         * @var Aurora $associatedClassName
+                         */
+                        $associatedClassName = $propertyType->getName();
+                        $associatedObject = $associatedClassName::find($aurora->$columnName);
+                        $property->setValue($aurora, $associatedObject);
+                    } else {
+                        $property->setValue($aurora, $aurora->$columnName);
+                    }
+
+                    unset($aurora->$columnName);
+                }
+            }
+
+            return $aurora;
+        } catch (\ReflectionException $exception) {
+            throw new \Exception($exception->getMessage());
+        }
+    }
+}
