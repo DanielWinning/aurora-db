@@ -4,7 +4,7 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-0.1.0-blue" alt="Version 0.1.0">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-98.14%25-green" alt="PHP Coverage 98.14%">
+<img src="https://img.shields.io/badge/PHP Coverage-98.21%25-green" alt="PHP Coverage 98.21%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
@@ -31,7 +31,7 @@ $connection = new DatabaseConnection(
 Aurora::setDatabaseConnection($connection);
 ```
 
-This allows you to use `Aurora` models to interact with your database.
+This allows you to use `Aurora` models to interact with your database via a single shared connection.
 
 ### The `Aurora` Model
 
@@ -180,4 +180,12 @@ $article = Article::find(1);
 $article->setTitle('My Updated Article Title');
 
 $article->save();
+```
+
+And we can also delete existing records:
+
+```php
+$article = Article::find(1);
+
+$article->delete();
 ```

@@ -156,4 +156,22 @@ class AuroraTest extends TestCase
 
         $this->assertEquals(self::UPDATE_MESSAGE, $freshArticle->getTitle());
     }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
+    public function testDelete(): void
+    {
+        $article = Article::getLatest();
+
+        $this->assertInstanceOf(Article::class, $article);
+
+        $articleId = $article->getId();
+
+        $article->delete();
+
+        $this->assertNotEquals($articleId, Article::getLatest());
+    }
 }

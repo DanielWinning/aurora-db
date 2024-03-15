@@ -332,4 +332,21 @@ class Aurora
 
         return $this;
     }
+
+    /**
+     * @return bool
+     *
+     * @throws \Exception
+     */
+    public function delete(): bool
+    {
+        $sql = sprintf(
+            'DELETE FROM %s WHERE %s = :id',
+            static::getSchemaAndTableCombined(),
+            static::getPrimaryIdentifierColumnName()
+        );
+
+        $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        return $query->execute(['id' => $this->getId()]);
+    }
 }
