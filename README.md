@@ -108,6 +108,14 @@ class Article extends Aurora
     {
         return $this->title;
     }
+    
+    /**
+    * @return string
+    */
+    public function setTitle(): string
+    {
+        $this->title = $title;
+    }
 
     /**
      * @return User
@@ -120,7 +128,21 @@ class Article extends Aurora
 ```
 
 All `Aurora` models have a `getId()` method which returns the value of the property with the `#[Identifier]` attribute. 
-**Identifiers must be `protected` and are required as part of a valid `Aurora` model.**
+**Identifiers must be `protected` and are required as part of a valid `Aurora` model.** All other properties which you
+also wish to map to a database column should use the `#[Column($name)` attribute.
+
+By default, the table name associated with your `Aurora` class will be the same name as your class - so `User` and `Article` in this case.
+In addition, no schema will be set for your class - output queries will look something like this `SELECT * FROM User ...`.
+
+You may wish to specify a schema and table name:
+
+```php
+#[Schema('Core')]
+#[Table('User')]
+class User extends Aurora {
+    ...
+}
+```
 
 ### Working with `Aurora` models
 
@@ -148,4 +170,14 @@ And we can retrieve them:
 $user = User::find(1);
 
 $article = Article::getLatest();
+```
+
+The `save()` method can also be used to update existing records:
+
+```php
+$article = Article::find(1);
+
+$article->setTitle('My Updated Article Title');
+
+$article->save();
 ```
