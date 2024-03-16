@@ -37,7 +37,9 @@ class AuroraMapper
                             $associatedObject = $propertyClass::find($aurora->$columnName);
                             $property->setValue($aurora, $associatedObject);
                         } else {
-                            if (interface_exists($propertyClass) || in_array(\DateTimeInterface::class, class_implements($propertyClass))) {
+                            $implementsDateTimeInterface = in_array(\DateTimeInterface::class, class_implements($propertyClass));
+
+                            if ($propertyClass === \DateTimeInterface::class || $implementsDateTimeInterface) {
                                 $property->setValue($aurora, new \DateTime($aurora->$columnName));
                             }
                         }

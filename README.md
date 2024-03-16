@@ -1,4 +1,4 @@
-# Luma | Database Component
+# Luma | Aurora DB
 
 <div>
 <!-- Version Badge -->
@@ -8,6 +8,8 @@
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
+
+The *small but mighty* PHP database component.
 
 - [Installation](#installation)
 - [Usage](#usage)
