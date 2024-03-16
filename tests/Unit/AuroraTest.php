@@ -181,4 +181,20 @@ class AuroraTest extends TestCase
 
         $this->assertNotEquals($articleId, Article::getLatest());
     }
+
+    /**
+     * @return void
+     *
+     * @throws \ReflectionException
+     */
+    public function testFindBy()
+    {
+        $user = User::findBy('username', 'Danny');
+
+        $this->assertEquals(1, $user->getId());
+        $this->assertEquals('danny@test.com', $user->getEmailAddress());
+
+        $this->expectException(\Exception::class);
+        InvalidAurora::findBy('name', 'Test');
+    }
 }

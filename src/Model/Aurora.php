@@ -51,6 +51,36 @@ class Aurora
     }
 
     /**
+     * @param string $property
+     * @param string|int $value
+     *
+     * @return ?static
+     *
+     * @throws \ReflectionException
+     */
+    public static function findBy(string $property, string|int $value): ?static
+    {
+        $reflector = new \ReflectionClass(static::class);
+        $reflectionProperty = $reflector->getProperty($property);
+        $columnAttribute = $reflectionProperty->getAttributes(Column::class)[0] ?? null;
+
+        if (!$columnAttribute) {
+            throw new \Exception("Property {$property} does not exist or does not have a Column attribute.");
+        }
+
+        $columnName = $columnAttribute->newInstance()->name;
+
+        $sql = sprintf(
+            'SELECT * FROM %s WHERE %s = :value LIMIT 1',
+            static::getSchemaAndTableCombined(),
+            $columnName
+        );
+        $result = static::executeQuery($sql, ['value' => $value]);
+
+        return $result ? AuroraMapper::map($result) : null;
+    }
+
+    /**
      * @return ?static
      */
     public static function getLatest(): ?static

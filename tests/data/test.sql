@@ -1,7 +1,5 @@
 CREATE DATABASE DatabaseComponentTest;
 
-DROP TABLE IF EXISTS DatabaseComponentTest.AuroraExtension;
-
 USE DatabaseComponentTest;
 
 DROP TABLE IF EXISTS AuroraExtension, User, Article;

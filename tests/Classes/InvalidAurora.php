@@ -6,4 +6,5 @@ use Luma\DatabaseComponent\Model\Aurora;
 
 class InvalidAurora extends Aurora
 {
+    private string $name;
 }
