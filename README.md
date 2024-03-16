@@ -4,10 +4,19 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version 1.0.0">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-98.61%25-green" alt="PHP Coverage 98.61%">
+<img src="https://img.shields.io/badge/PHP Coverage-98.60%25-green" alt="PHP Coverage 98.60%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
+
+- [Installation](#installation)
+- [Usage](#usage)
+    - [The `Aurora` Model](#the-aurora-model)
+        - [Create Database Tables](#create-database-tables)
+        - [Create `Aurora` Classes](#create-aurora-classes)
+        - [CRUD Methods](#crud-methods)
+        - [Pagination](#pagination)
+    - [Query Builder](#query-builder)
 
 ## Installation
 
@@ -35,7 +44,7 @@ This allows you to use `Aurora` models to interact with your database via a sing
 
 ### The `Aurora` Model
 
-#### The Basics - Setup
+#### Create Database Tables
 
 An `Aurora` model is an entity that is specifically designed to interact with a corresponding database table. One instance
 of an `Aurora` model relates to one row in its corresponding database table.
@@ -55,6 +64,8 @@ CREATE TABLE Article (
     foreign key (intAuthorId) references User(intUserId)
 );
 ```
+
+#### Create `Aurora` Classes
 
 We can create the following `Aurora` models which will allow us to create, retrieve, update and delete records within these tables.
 
@@ -144,7 +155,7 @@ class User extends Aurora {
 }
 ```
 
-### Working with `Aurora` models
+### CRUD Methods
 
 Let's add some new records to the tables we created:
 
@@ -197,7 +208,7 @@ $article = Article::find(1);
 $article->delete();
 ```
 
-#### Pagination
+### Pagination
 
 Aurora also allows you to paginate your data:
 
@@ -205,7 +216,7 @@ Aurora also allows you to paginate your data:
 $articles = Article::paginate($page = 1, $perPage = 10, $orderBy = null, $orderDirection = null);
 ```
 
-### Query Builder
+## Query Builder
 
 The `Aurora` model includes a handy query builder. Some important notes:
 
@@ -218,42 +229,44 @@ The `Aurora` model includes a handy query builder. Some important notes:
 > - When **more than one** result is returned, this returns an array containing instances of the calling class.
 > - When **zero** results are returned, NULL is returned by the query builder.
 
-
-
-
 Here are some of the methods that you can use:
 
-#### `select`
-> select(array $columns = ['*']): static
-
-The select method adds a `SELECT` statement to `Aurora`'s internal query string.
-
 ```php
-$users = User::select();
+// Creating some new records in a blank table (with added email address column)
+User::create('User One', 'user1@test.com')->save();
+User::create('User Two', 'user2@test.com')->save();
+User::create('User Three', 'user3@test.com')->save();
 
-// Execute the query. Calling select()->get() with no arguments is effectively the same as calling User::all()
-$users = $users->get();
-```
+// Return all users as an array
+$user = User::select()->get(); 
 
-We can specify the individual columns we wish to fetch - you can provide either column or property names:
+// Specify columns
+$users = User::select('email')->get();
 
-```php
-$articles = Article::select('title')->get();
+$users[0]->getEmailAddress(); // user2@test.com
+$users[0]->getId(); // 2 (we always populate the primary key)
+$users[0]->getUsername(); // fails
 
-echo $articles[0]->getTitle(); // Hello, Aurora!
-echo $articles[0]->getId(); // 1
-echo $articles[0]->getAuthor(); // Will fail, author column not fetched
-```
+// Add a where clause
+$user = User::select()->whereIs('username', 'User Three')->get();
 
-*`whereIs`*
+$user->getId(); // 3
 
-> `whereIs(string $column, string|int $value): static`
+// We can chain whereIs (and other WHERE methods), which automatically converts them to an AND
+// Returns NULL as no rows match this query
+$user = User::select()->whereIs('username', 'User Three')->whereIs('id', 2)->get();
 
-Adds a `WHERE` clause to the internal query string. Can be chained, in which case it will convert the `WHERE` to 
-and `AND`.
+// We can specify not conditions
+$users = User::select()->whereNot('username', 'User Three')->get();
 
-```php
-$user = User::select()->whereIs('name', 'Dan')->get();
+count($users); // 2
 
-echo $user->getId(); // 1
+// We can perform whereIn/whereNotIn queries
+$user = User::select()->whereNotIn('id', [1, 2])->get();
+
+$user->getId(); // 3
+
+$users = User::select('username')->whereIn('id', [1, 3])->get();
+
+count($users); // 2
 ```

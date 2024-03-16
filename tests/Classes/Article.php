@@ -20,7 +20,7 @@ class Article extends Aurora
     #[Column('intAuthorId')]
     private User $author;
 
-    #[Column(name: 'dtmCreated', nullable: false, hasDefault: true)]
+    #[Column(name: 'dtmCreated')]
     private \DateTimeInterface $created;
 
     /**

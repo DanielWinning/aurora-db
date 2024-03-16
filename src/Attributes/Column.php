@@ -6,13 +6,9 @@ namespace Luma\AuroraDatabase\Attributes;
 class Column
 {
     public string $name;
-    public bool $nullable;
-    public bool $hasDefault = false;
 
-    public function __construct(string $name, bool $nullable = true, bool $hasDefault = false)
+    public function __construct(string $name)
     {
         $this->name = $name;
-        $this->nullable = $nullable;
-        $this->hasDefault = $hasDefault;
     }
 }
