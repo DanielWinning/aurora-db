@@ -537,7 +537,6 @@ class Aurora
             implode(',', $values)
         );
 
-        var_dump($sql, $params);
         $query = static::$connection->getConnection()->prepare($sql);
         $query->execute($params);
 

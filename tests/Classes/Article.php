@@ -21,7 +21,7 @@ class Article extends Aurora
     private User $author;
 
     #[Column(name: 'dtmCreated', nullable: false, hasDefault: true)]
-    private \DateTime $created;
+    private \DateTimeInterface $created;
 
     /**
      * @return string
@@ -55,5 +55,15 @@ class Article extends Aurora
     public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created;
+    }
+
+    /**
+     * @param \DateTimeInterface $created
+     *
+     * @return void
+     */
+    public function setCreatedAt(\DateTimeInterface $created): void
+    {
+        $this->created = $created;
     }
 }

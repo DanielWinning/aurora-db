@@ -31,15 +31,13 @@ class AuroraMapper
                     $propertyType = $property->getType();
 
                     if ($propertyType && !$propertyType->isBuiltin()) {
-                        $propertyClass = new ($propertyType->getName());
+                        $propertyClass = $propertyType->getName();
 
-                        if ($propertyClass instanceof Aurora) {
-                            $associatedClassName = $propertyType->getName();
-                            $associatedObject = $associatedClassName::find($aurora->$columnName);
+                        if (is_subclass_of($propertyClass, Aurora::class)) {
+                            $associatedObject = $propertyClass::find($aurora->$columnName);
                             $property->setValue($aurora, $associatedObject);
                         } else {
-                            // DateTime
-                            if ($propertyClass instanceof \DateTimeInterface) {
+                            if (interface_exists($propertyClass) || in_array(\DateTimeInterface::class, class_implements($propertyClass))) {
                                 $property->setValue($aurora, new \DateTime($aurora->$columnName));
                             }
                         }
