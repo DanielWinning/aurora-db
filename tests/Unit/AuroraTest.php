@@ -218,4 +218,27 @@ class AuroraTest extends TestCase
         $this->assertEquals(1, User::count());
         $this->assertEquals(3, AuroraExtension::count());
     }
+
+    public function testPaginate(): void
+    {
+        $articles = Article::paginate();
+
+        $this->assertIsArray($articles);
+        $this->assertNotEmpty($articles);
+        $this->assertCount(10, $articles);
+
+        $articles = Article::paginate(2, 5);
+
+        $this->assertCount(5, $articles);
+        $this->assertEquals(6, $articles[0]->getId());
+
+        $articles = Article::paginate(1, 10, 'id', 'DESC');
+
+        $this->assertNotEquals(1, $articles[0]->getId());
+
+        // Invalid prop name should just return default sort order
+        $articles = Article::paginate(1, 10, 'content');
+
+        $this->assertEquals(1, $articles[0]->getId());
+    }
 }

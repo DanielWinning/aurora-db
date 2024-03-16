@@ -20,6 +20,7 @@ class DatabaseConnection
             $this->connection = new \PDO($dsn, $username, $password, $options);
             $this->connection->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_NATURAL);
             $this->connection->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_CLASS);
+            $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         } catch (\PDOException $exception) {
             throw new \Exception($exception->getMessage());
         }

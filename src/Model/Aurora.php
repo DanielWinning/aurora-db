@@ -49,6 +49,40 @@ class Aurora
     }
 
     /**
+     * @param int $page
+     * @param int $perPage
+     * @param string|null $orderBy
+     * @param string|null $orderDirection
+     *
+     * @return static[]|null
+     */
+    public static function paginate(int $page = 1, int $perPage = 10, string $orderBy = null, string $orderDirection = null): null|array
+    {
+        $offset = ($page - 1) * $perPage;
+
+        $sql = sprintf(
+            'SELECT * FROM %s',
+            static::getSchemaAndTableCombined()
+        );
+
+        if ($orderBy) {
+            try {
+                $reflector = new \ReflectionClass(static::class);
+                $property = $reflector->getProperty($orderBy);
+                $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
+                $columnName = $columnAttribute ? $columnAttribute->newInstance()->name : $orderBy;
+                $sql .= sprintf(' ORDER BY %s %s', $columnName, $orderDirection ?? 'ASC');
+            } catch (\ReflectionException $exception) {
+                error_log($exception->getMessage());
+            }
+        }
+
+        $sql = sprintf('%s LIMIT %d OFFSET %d', $sql, $perPage, $offset);
+
+        return static::executeQuery($sql);
+    }
+
+    /**
      * @return int
      */
     public static function count(): int
@@ -69,9 +103,9 @@ class Aurora
     /**
      * @param int $id
      *
-     * @return ?static
+     * @return static|null
      */
-    public static function find(int $id): ?static
+    public static function find(int $id): static|null
     {
         return static::executeQuery(static::getFindQueryString(), ['id' => $id]);
     }
@@ -80,11 +114,11 @@ class Aurora
      * @param string $property
      * @param string|int $value
      *
-     * @return ?static
+     * @return static|null
      *
      * @throws \ReflectionException
      */
-    public static function findBy(string $property, string|int $value): ?static
+    public static function findBy(string $property, string|int $value): static|null
     {
         $reflector = new \ReflectionClass(static::class);
         $reflectionProperty = $reflector->getProperty($property);
@@ -130,7 +164,18 @@ class Aurora
     private static function executeQuery(string $sql, array $params = null): static|array|null
     {
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
-        $query->execute($params);
+
+        if ($params && count($params)) {
+            foreach ($params as $key => $value) {
+                if (is_int($value)) {
+                    $query->bindParam(sprintf(':%s', $key), $value, \PDO::PARAM_INT);
+                } else {
+                    $query->bindParam(sprintf(':%s', $key), $value);
+                }
+            }
+        }
+
+        $query->execute();
         $query->setFetchMode(\PDO::FETCH_CLASS, static::class);
 
         $result = $query->fetchAll();
@@ -180,7 +225,7 @@ class Aurora
      *
      * @return static
      */
-    public static function make(array $data): self
+    public static function make(array $data): static
     {
         $instance = new static();
         $reflector = new \ReflectionClass($instance);
@@ -197,9 +242,9 @@ class Aurora
     }
 
     /**
-     * @return ?string
+     * @return string|null
      */
-    public static function getPrimaryIdentifierPropertyName(): ?string
+    public static function getPrimaryIdentifierPropertyName(): string|null
     {
         $primaryIdentifier = static::getPrimaryIdentifier();
 
@@ -210,9 +255,9 @@ class Aurora
      * Returns the name of the primary identifier column as seen in the database. Set using the #[Identifier] attribute
      * on your Aurora's primary key property. All Aurora models require an #[Identifier] attribute.
      *
-     * @return ?string
+     * @return string|null
      */
-    public static function getPrimaryIdentifierColumnName(): ?string
+    public static function getPrimaryIdentifierColumnName(): string|null
     {
         $primaryIdentifier = static::getPrimaryIdentifier();
 
@@ -220,9 +265,9 @@ class Aurora
     }
 
     /**
-     * @return ?array
+     * @return array|null
      */
-    private static function getPrimaryIdentifier(): ?array
+    private static function getPrimaryIdentifier(): array|null
     {
         $instance = new static();
         $reflector = new \ReflectionClass($instance);
@@ -286,7 +331,7 @@ class Aurora
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function save(): static
     {
