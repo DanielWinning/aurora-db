@@ -306,6 +306,8 @@ class Aurora
 
         $result = $query->fetchAll();
 
+        static::$queryString = '';
+
         if (!$result) return null;
 
         if (count($result) === 1) {
