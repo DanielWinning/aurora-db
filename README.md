@@ -196,3 +196,9 @@ $article = Article::find(1);
 
 $article->delete();
 ```
+
+Aurora also allows you to paginate your data:
+
+```php
+$articles = Article::paginate($page = 1, $perPage = 10, $orderBy = null, $orderDirection = null);
+```
