@@ -1,6 +1,6 @@
 <?php
 
-namespace Luma\DatabaseComponent\Attributes;
+namespace Luma\AuroraDatabase\Attributes;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
 class Column

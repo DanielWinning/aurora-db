@@ -1,6 +1,6 @@
 <?php
 
-namespace Luma\DatabaseComponent;
+namespace Luma\AuroraDatabase;
 
 class DatabaseConnection
 {

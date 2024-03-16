@@ -2,7 +2,7 @@
 
 namespace Luma\Tests\Classes;
 
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\Model\Aurora;
 
 class InvalidAurora extends Aurora
 {

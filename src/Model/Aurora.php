@@ -1,12 +1,12 @@
 <?php
 
-namespace Luma\DatabaseComponent\Model;
+namespace Luma\AuroraDatabase\Model;
 
-use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Attributes\Identifier;
-use Luma\DatabaseComponent\Attributes\Schema;
-use Luma\DatabaseComponent\Attributes\Table;
-use Luma\DatabaseComponent\DatabaseConnection;
+use Luma\AuroraDatabase\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Identifier;
+use Luma\AuroraDatabase\Attributes\Schema;
+use Luma\AuroraDatabase\Attributes\Table;
+use Luma\AuroraDatabase\DatabaseConnection;
 
 class Aurora
 {
@@ -143,9 +143,9 @@ class Aurora
     }
 
     /**
-     * @return ?static
+     * @return static|null
      */
-    public static function getLatest(): ?static
+    public static function getLatest(): static|null
     {
         $sql = sprintf(
             'SELECT * FROM %s ORDER BY %s DESC LIMIT 1',
@@ -157,9 +157,6 @@ class Aurora
         return $latest ?? null;
     }
 
-    /*
-     * QUERY BUILDER
-     */
     /**
      * @param string[] $columns
      *
@@ -301,6 +298,8 @@ class Aurora
     }
 
     /**
+     * Executes the built-up query string and returns the result.
+     *
      * @return static|static[]|null
      */
     public function get(): static|array|null

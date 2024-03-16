@@ -2,10 +2,10 @@
 
 namespace Luma\Tests\Classes;
 
-use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Attributes\Identifier;
-use Luma\DatabaseComponent\Attributes\Schema;
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Identifier;
+use Luma\AuroraDatabase\Attributes\Schema;
+use Luma\AuroraDatabase\Model\Aurora;
 
 #[Schema('DatabaseComponentTest')]
 class User extends Aurora

@@ -1,8 +1,8 @@
 <?php
 
-namespace Luma\DatabaseComponent\Model;
+namespace Luma\AuroraDatabase\Model;
 
-use Luma\DatabaseComponent\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Column;
 
 class AuroraMapper
 {

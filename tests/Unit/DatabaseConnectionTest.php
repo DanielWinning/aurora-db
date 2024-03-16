@@ -3,7 +3,7 @@
 namespace Luma\Tests\Unit;
 
 use Dotenv\Dotenv;
-use Luma\DatabaseComponent\DatabaseConnection;
+use Luma\AuroraDatabase\DatabaseConnection;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseConnectionTest extends TestCase

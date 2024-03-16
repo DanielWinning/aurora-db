@@ -3,8 +3,8 @@
 namespace Luma\Tests\Unit;
 
 use Dotenv\Dotenv;
-use Luma\DatabaseComponent\Model\Aurora;
-use Luma\DatabaseComponent\DatabaseConnection;
+use Luma\AuroraDatabase\Model\Aurora;
+use Luma\AuroraDatabase\DatabaseConnection;
 use Luma\Tests\Classes\Article;
 use Luma\Tests\Classes\AuroraExtension;
 use Luma\Tests\Classes\InvalidAurora;

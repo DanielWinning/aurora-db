@@ -2,11 +2,11 @@
 
 namespace Luma\Tests\Classes;
 
-use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Attributes\Identifier;
-use Luma\DatabaseComponent\Attributes\Schema;
-use Luma\DatabaseComponent\Attributes\Table;
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Identifier;
+use Luma\AuroraDatabase\Attributes\Schema;
+use Luma\AuroraDatabase\Attributes\Table;
+use Luma\AuroraDatabase\Model\Aurora;
 
 #[Schema('DatabaseComponentTest')]
 #[Table('AuroraExtension')]

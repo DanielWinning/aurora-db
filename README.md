@@ -2,7 +2,7 @@
 
 <div>
 <!-- Version Badge -->
-<img src="https://img.shields.io/badge/Version-0.1.0-blue" alt="Version 0.1.0">
+<img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version 1.0.0">
 <!-- PHP Coverage Badge -->
 <img src="https://img.shields.io/badge/PHP Coverage-98.91%25-green" alt="PHP Coverage 98.91%">
 <!-- License Badge -->
@@ -20,8 +20,8 @@
 In your applications entrypoint, connect to your database:
 
 ```php
-use Luma\DatabaseComponent\DatabaseConnection;
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\DatabaseConnection;
+use Luma\AuroraDatabase\Model\Aurora;
  
 $connection = new DatabaseConnection(
     'mysql:host=localhost;port=3306;',
@@ -59,10 +59,10 @@ CREATE TABLE Article (
 We can create the following `Aurora` models which will allow us to create, retrieve, update and delete records within these tables.
 
 ```php
-use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Attributes\Identifier;
-use Luma\DatabaseComponent\Attributes\Schema;
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Identifier;
+use Luma\AuroraDatabase\Attributes\Schema;
+use Luma\AuroraDatabase\Model\Aurora;
 
 class User extends Aurora
 {
@@ -84,10 +84,10 @@ class User extends Aurora
 ```
 
 ```php
-use Luma\DatabaseComponent\Attributes\Column;
-use Luma\DatabaseComponent\Attributes\Identifier;
-use Luma\DatabaseComponent\Attributes\Schema;
-use Luma\DatabaseComponent\Model\Aurora;
+use Luma\AuroraDatabase\Attributes\Column;
+use Luma\AuroraDatabase\Attributes\Identifier;
+use Luma\AuroraDatabase\Attributes\Schema;
+use Luma\AuroraDatabase\Model\Aurora;
 
 class Article extends Aurora
 {
