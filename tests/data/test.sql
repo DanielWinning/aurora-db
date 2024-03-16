@@ -31,6 +31,7 @@ CREATE TABLE Article (
     intArticleId int primary key auto_increment not null,
     strTitle varchar(255) not null,
     intAuthorId int not null,
+    dtmCreated datetime not null default now(),
     foreign key (intAuthorId) references User(intUserId)
 );
 

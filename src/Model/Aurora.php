@@ -497,9 +497,9 @@ class Aurora
     }
 
     /**
-     * @return static
+     * @return static|null
      */
-    private function insert(): static
+    private function insert(): static|null
     {
         $reflector = new \ReflectionClass($this);
 
@@ -508,20 +508,25 @@ class Aurora
         $params = [];
 
         foreach ($reflector->getProperties() as $property) {
-            $column = $property->getAttributes(Column::class)[0] ?? null;
+            $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
 
-            if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
-                $columnName = $column->newInstance()->name;
-                $columns[] = $columnName;
-                $values[] = ':' . $columnName;
+            if ($columnAttribute && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
+                $columnAttribute = $columnAttribute->newInstance();
+                $columnName = $columnAttribute->name;
 
-                $value = $property->getValue($this);
+                if (!$property->isInitialized($this)) {
+                    continue;
+                } else {
+                    $columns[] = $columnName;
+                    $values[] = ':' . $columnName;
+                    $value = $property->getValue($this);
 
-                if ($value instanceof Aurora) {
-                    $value = $value->getId();
+                    if ($value instanceof Aurora) {
+                        $value = $value->getId();
+                    }
+
+                    $params[$columnName] = $value;
                 }
-
-                $params[$columnName] = $value;
             }
         }
 
@@ -532,6 +537,7 @@ class Aurora
             implode(',', $values)
         );
 
+        var_dump($sql, $params);
         $query = static::$connection->getConnection()->prepare($sql);
         $query->execute($params);
 
@@ -562,6 +568,10 @@ class Aurora
 
                 if ($value instanceof Aurora) {
                     $value = $value->getId();
+                }
+
+                if ($value instanceof \DateTimeInterface) {
+                    $value = $value->format(DATE_W3C);
                 }
 
                 $params[$columnName] = $value;

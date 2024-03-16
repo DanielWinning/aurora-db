@@ -31,12 +31,18 @@ class AuroraMapper
                     $propertyType = $property->getType();
 
                     if ($propertyType && !$propertyType->isBuiltin()) {
-                        /**
-                         * @var Aurora $associatedClassName
-                         */
-                        $associatedClassName = $propertyType->getName();
-                        $associatedObject = $associatedClassName::find($aurora->$columnName);
-                        $property->setValue($aurora, $associatedObject);
+                        $propertyClass = new ($propertyType->getName());
+
+                        if ($propertyClass instanceof Aurora) {
+                            $associatedClassName = $propertyType->getName();
+                            $associatedObject = $associatedClassName::find($aurora->$columnName);
+                            $property->setValue($aurora, $associatedObject);
+                        } else {
+                            // DateTime
+                            if ($propertyClass instanceof \DateTimeInterface) {
+                                $property->setValue($aurora, new \DateTime($aurora->$columnName));
+                            }
+                        }
                     } else {
                         $property->setValue($aurora, $aurora->$columnName);
                     }
@@ -46,7 +52,9 @@ class AuroraMapper
             }
 
             return $aurora;
-        } catch (\ReflectionException $exception) {
+        } catch (\ReflectionException|\Exception $exception) {
+            error_log($exception->getMessage());
+
             return null;
         }
     }

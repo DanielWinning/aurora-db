@@ -20,6 +20,9 @@ class Article extends Aurora
     #[Column('intAuthorId')]
     private User $author;
 
+    #[Column(name: 'dtmCreated', nullable: false, hasDefault: true)]
+    private \DateTime $created;
+
     /**
      * @return string
      */
@@ -44,5 +47,13 @@ class Article extends Aurora
     public function getAuthor(): User
     {
         return $this->author;
+    }
+
+    /**
+     * @return \DateTimeInterface
+     */
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->created;
     }
 }
