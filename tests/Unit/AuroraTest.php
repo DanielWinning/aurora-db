@@ -291,5 +291,17 @@ class AuroraTest extends TestCase
 
         $this->assertCount(2, $extensions);
         $this->assertEquals('Extension Three', $extensions[1]->getName());
+
+        $extensions = AuroraExtension::select()->whereNot('id', 2)->get();
+
+        $this->assertIsArray($extensions);
+        $this->assertCount(2, $extensions);
+        $this->assertEquals(1, $extensions[0]->getId());
+        $this->assertEquals(3, $extensions[1]->getId());
+
+        $extension = AuroraExtension::select()->whereNotIn('id', [1, 3])->get();
+
+        $this->assertInstanceOf(AuroraExtension::class, $extension);
+        $this->assertEquals(2, $extension->getId());
     }
 }

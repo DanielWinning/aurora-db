@@ -196,6 +196,17 @@ class Aurora
 
     /**
      * @param string $column
+     * @param string|int $value
+     *
+     * @return static
+     */
+    public function whereNot(string $column, string|int $value): static
+    {
+        return static::where($column, '!=', $value);
+    }
+
+    /**
+     * @param string $column
      * @param array $values
      *
      * @return static
@@ -203,6 +214,17 @@ class Aurora
     public function whereIn(string $column, array $values): static
     {
         return static::where($column, 'IN', $values);
+    }
+
+    /**
+     * @param string $column
+     * @param array $values
+     *
+     * @return static
+     */
+    public function whereNotIn(string $column, array $values): static
+    {
+        return static::where($column, 'NOT IN', $values);
     }
 
     /**
