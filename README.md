@@ -207,8 +207,53 @@ $articles = Article::paginate($page = 1, $perPage = 10, $orderBy = null, $orderD
 
 ### Query Builder
 
-The `Aurora` model includes a handy query builder:
+The `Aurora` model includes a handy query builder. Some important notes:
+
+> **In order to execute any query builder statement and retrieve the results, you must call the `get` method.**
+> 
+> **All query builder results are returned with the specified columns as well as their primary identifier, so this does not need to be specified.**
+> 
+> **There are 3 possible return types following a get() call:**
+> - When **one** result is returned, this returns as an instance of the calling class.
+> - When **more than one** result is returned, this returns an array containing instances of the calling class.
+> - When **zero** results are returned, NULL is returned by the query builder.
+
+
+
+
+Here are some of the methods that you can use:
+
+#### `select`
+> select(array $columns = ['*']): static
+
+The select method adds a `SELECT` statement to `Aurora`'s internal query string.
+
+```php
+$users = User::select();
+
+// Execute the query. Calling select()->get() with no arguments is effectively the same as calling User::all()
+$users = $users->get();
+```
+
+We can specify the individual columns we wish to fetch - you can provide either column or property names:
+
+```php
+$articles = Article::select('title')->get();
+
+echo $articles[0]->getTitle(); // Hello, Aurora!
+echo $articles[0]->getId(); // 1
+echo $articles[0]->getAuthor(); // Will fail, author column not fetched
+```
+
+*`whereIs`*
+
+> `whereIs(string $column, string|int $value): static`
+
+Adds a `WHERE` clause to the internal query string. Can be chained, in which case it will convert the `WHERE` to 
+and `AND`.
 
 ```php
 $user = User::select()->whereIs('name', 'Dan')->get();
+
+echo $user->getId(); // 1
 ```
