@@ -39,15 +39,41 @@ class Aurora
     }
 
     /**
+     * @return static[]|null
+     */
+    public static function all(): array|null
+    {
+        $sql = sprintf('SELECT * FROM %s', static::getSchemaAndTableCombined());
+
+        return static::executeQuery($sql);
+    }
+
+    /**
+     * @return int
+     */
+    public static function count(): int
+    {
+        $sql = sprintf(
+            'SELECT COUNT(*) FROM %s',
+            self::getSchemaAndTableCombined()
+        );
+        $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $query->execute();
+        $query->setFetchMode(\PDO::FETCH_NUM);
+
+        $result = $query->fetch();
+
+        return $result ? (int) $result[0] : 0;
+    }
+
+    /**
      * @param int $id
      *
      * @return ?static
      */
     public static function find(int $id): ?static
     {
-        $aurora = static::executeQuery(static::getFindQueryString(), ['id' => $id]);
-
-        return $aurora ? AuroraMapper::map($aurora) : null;
+        return static::executeQuery(static::getFindQueryString(), ['id' => $id]);
     }
 
     /**
@@ -77,7 +103,7 @@ class Aurora
         );
         $result = static::executeQuery($sql, ['value' => $value]);
 
-        return $result ? AuroraMapper::map($result) : null;
+        return $result ?? null;
     }
 
     /**
@@ -92,26 +118,32 @@ class Aurora
         );
         $latest = static::executeQuery($sql);
 
-        return $latest ? AuroraMapper::map($latest) : null;
+        return $latest ?? null;
     }
 
     /**
      * @param string $sql
      * @param ?array $params
      *
-     * @return ?static
+     * @return static|array|null
      */
-    private static function executeQuery(string $sql, array $params = null): ?static
+    private static function executeQuery(string $sql, array $params = null): static|array|null
     {
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
         $query->execute($params);
         $query->setFetchMode(\PDO::FETCH_CLASS, static::class);
 
-        $result = $query->fetch();
+        $result = $query->fetchAll();
 
         if (!$result) return null;
 
-        return $result;
+        if (count($result) === 1) {
+            return AuroraMapper::map($result[0]);
+        }
+
+        return array_map(function(Aurora $aurora) {
+            return AuroraMapper::map($aurora);
+        }, $result);
     }
 
     /**

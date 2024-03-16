@@ -197,4 +197,25 @@ class AuroraTest extends TestCase
         $this->expectException(\Exception::class);
         InvalidAurora::findBy('name', 'Test');
     }
+
+    /**
+     * @return void
+     */
+    public function testAll(): void
+    {
+        $articles = Article::all();
+
+        $this->assertNotEmpty($articles);
+        $this->assertEquals(1, $articles[0]->getId());
+        $this->assertEquals('Danny', $articles[0]->getAuthor()->getUsername());
+    }
+
+    /**
+     * @return void
+     */
+    public function testCount(): void
+    {
+        $this->assertEquals(1, User::count());
+        $this->assertEquals(3, AuroraExtension::count());
+    }
 }
