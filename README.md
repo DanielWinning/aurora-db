@@ -169,7 +169,14 @@ And we can retrieve them:
 ```php
 $user = User::find(1);
 
+// Find by takes the PROPERTY name (not column name, unless they're the same of course)
+$user = User::findBy('username', 'Dan');
+
 $article = Article::getLatest();
+
+$articles = Article::all();
+
+$userCount = User::count();
 ```
 
 The `save()` method can also be used to update existing records:
