@@ -4,7 +4,7 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-0.1.0-blue" alt="Version 0.1.0">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-98.65%25-green" alt="PHP Coverage 98.65%">
+<img src="https://img.shields.io/badge/PHP Coverage-98.86%25-green" alt="PHP Coverage 98.86%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
@@ -197,8 +197,18 @@ $article = Article::find(1);
 $article->delete();
 ```
 
+#### Pagination
+
 Aurora also allows you to paginate your data:
 
 ```php
 $articles = Article::paginate($page = 1, $perPage = 10, $orderBy = null, $orderDirection = null);
+```
+
+### Query Builder
+
+The `Aurora` model includes a handy query builder:
+
+```php
+$user = User::select()->whereIs('name', 'Dan')->get();
 ```

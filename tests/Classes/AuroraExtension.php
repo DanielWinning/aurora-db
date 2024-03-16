@@ -14,7 +14,7 @@ class AuroraExtension extends Aurora
 {
     #[Identifier]
     #[Column('id')]
-    private int $id;
+    protected int $id;
 
     #[Column('name')]
     private string $name;

@@ -11,6 +11,8 @@ use Luma\DatabaseComponent\DatabaseConnection;
 class Aurora
 {
     protected static ?DatabaseConnection $connection = null;
+    protected static string $queryString = '';
+    protected static array $queryBindings = [];
 
     /**
      * @return int
@@ -153,6 +155,108 @@ class Aurora
         $latest = static::executeQuery($sql);
 
         return $latest ?? null;
+    }
+
+    /*
+     * QUERY BUILDER
+     */
+    /**
+     * @param string[] $columns
+     *
+     * @return static
+     */
+    public static function select(array $columns = ['*']): static
+    {
+        $columns = array_map(function (string $columnName) {
+            return static::getColumnNameByReflection($columnName);
+        }, $columns);
+        $primaryColumn = static::getPrimaryIdentifierColumnName();
+
+        if (!in_array('*', $columns) && !in_array($primaryColumn, $columns)) {
+            $columns[] = $primaryColumn;
+        }
+
+        $columns = implode(',', $columns);
+
+        self::$queryString = sprintf('SELECT %s FROM %s', $columns, static::getSchemaAndTableCombined());
+
+        return new static;
+    }
+
+    /**
+     * @param string $column
+     * @param string|int $value
+     *
+     * @return static
+     */
+    public function whereIs(string $column, string|int $value): static
+    {
+        return static::where($column, '=', $value);
+    }
+
+    /**
+     * @param string $column
+     * @param array $values
+     *
+     * @return static
+     */
+    public function whereIn(string $column, array $values): static
+    {
+        return static::where($column, 'IN', $values);
+    }
+
+    /**
+     * @param string $column
+     * @param string $operator
+     * @param string|int|array $value
+     *
+     * @return static
+     */
+    protected function where(string $column, string $operator, string|int|array $value): static
+    {
+        if (str_contains(self::$queryString, 'WHERE')) {
+            self::$queryString .= ' AND';
+        } else {
+            self::$queryString .= ' WHERE';
+        }
+
+        $column = static::getColumnNameByReflection($column);
+
+        self::$queryString .= " {$column} {$operator} ";
+
+        if (is_string($value)) {
+            self::$queryString .= "'{$value}'";
+        } elseif (is_array($value)) {
+            self::$queryString .= '(';
+
+            foreach ($value as $key => $singleValue) {
+                if (!is_numeric($key)) continue;
+
+                if (is_string($singleValue)) {
+                    self::$queryString .= "'{$singleValue}'";
+                } else {
+                    self::$queryString .= $singleValue;
+                }
+
+                if ($key !== count($value) - 1) {
+                    self::$queryString .= ',';
+                }
+            }
+
+            self::$queryString .= ')';
+        } else {
+            self::$queryString .= $value;
+        }
+
+        return new static;
+    }
+
+    /**
+     * @return static|static[]|null
+     */
+    public function get(): static|array|null
+    {
+        return static::executeQuery(self::$queryString, self::$queryBindings);
     }
 
     /**
@@ -443,5 +547,22 @@ class Aurora
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
 
         return $query->execute(['id' => $this->getId()]);
+    }
+
+    /**
+     * @param string $propertyName
+     *
+     * @return string
+     */
+    private static function getColumnNameByReflection(string $propertyName): string
+    {
+        try {
+            $reflector = new \ReflectionProperty(static::class, $propertyName);
+            $columnAttribute = $reflector->getAttributes(Column::class)[0] ?? null;
+
+            return $columnAttribute ? $columnAttribute->newInstance()->name : $propertyName;
+        } catch (\ReflectionException $exception) {
+            return $propertyName;
+        }
     }
 }

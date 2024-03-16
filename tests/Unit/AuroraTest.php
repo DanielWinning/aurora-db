@@ -241,4 +241,55 @@ class AuroraTest extends TestCase
 
         $this->assertEquals(1, $articles[0]->getId());
     }
+
+    /**
+     * @return void
+     */
+    public function testQueryBuilderSelect(): void
+    {
+        $user = User::select()->get();
+
+        // As there is only one record in the User table, just return that record as a mapped Aurora model
+        $this->assertInstanceOf(User::class, $user);
+
+        $articles = Article::select()->get();
+
+        $this->assertIsArray($articles);
+        $this->assertInstanceOf(Article::class, $articles[0]);
+
+        $user = User::select(['username'])->get();
+
+        $this->assertEquals(1, $user->getId());
+        $this->assertEquals('Danny', $user->getUsername());
+
+        $this->expectException(\Error::class);
+        $emailAddress = $user->getEmailAddress();
+    }
+
+    /**
+     * @return void
+     */
+    public function testQueryBuilderWhere(): void
+    {
+        $extension = AuroraExtension::select()->whereIs('name', 'Extension Two')->get();
+
+        $this->assertInstanceOf(AuroraExtension::class, $extension);
+        $this->assertEquals(2, $extension->getId());
+
+        $extension = AuroraExtension::select()->whereIs('name', 'Extension One')->whereIs('id', 2)->get();
+
+        $this->assertNull($extension);
+
+        $extensions = AuroraExtension::select()
+            ->whereIn('name', ['Extension Two', 'Extension Three'])
+            ->get();
+
+        $this->assertCount(2, $extensions);
+        $this->assertEquals(2, $extensions[0]->getId());
+
+        $extensions = AuroraExtension::select()->whereIn('id', [1, 3])->get();
+
+        $this->assertCount(2, $extensions);
+        $this->assertEquals('Extension Three', $extensions[1]->getName());
+    }
 }
