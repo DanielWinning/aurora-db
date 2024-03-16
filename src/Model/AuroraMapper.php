@@ -10,11 +10,10 @@ class AuroraMapper
      * Used internally to map PDO results to Aurora instances.
      *
      * @param Aurora $aurora
-     * @return Aurora
      *
-     * @throws \Exception
+     * @return ?Aurora
      */
-    public static function map(Aurora $aurora): Aurora
+    public static function map(Aurora $aurora): ?Aurora
     {
         try {
             $reflector = new \ReflectionClass($aurora);
@@ -48,7 +47,7 @@ class AuroraMapper
 
             return $aurora;
         } catch (\ReflectionException $exception) {
-            throw new \Exception($exception->getMessage());
+            return null;
         }
     }
 }

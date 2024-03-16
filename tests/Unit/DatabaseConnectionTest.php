@@ -2,6 +2,7 @@
 
 namespace Luma\Tests\Unit;
 
+use Dotenv\Dotenv;
 use Luma\DatabaseComponent\DatabaseConnection;
 use PHPUnit\Framework\TestCase;
 
@@ -9,6 +10,17 @@ class DatabaseConnectionTest extends TestCase
 {
     /**
      * @return void
+     */
+    public function setUp(): void
+    {
+        $dotenv = Dotenv::createImmutable(dirname(__DIR__) . '/data');
+        $dotenv->load();
+    }
+
+    /**
+     * @return void
+     *
+     * @throws \Exception
      */
     public function testItConnectsToDatabase(): void
     {
@@ -19,6 +31,8 @@ class DatabaseConnectionTest extends TestCase
 
     /**
      * @return void
+     *
+     * @throws \Exception
      */
     public function testItCreatesPDOConnection(): void
     {
@@ -47,14 +61,15 @@ class DatabaseConnectionTest extends TestCase
 
     /**
      * @return DatabaseConnection
+     *
+     * @throws \Exception
      */
     private function getTestClass(): DatabaseConnection
     {
-        // @todo Refactor this so it doesn't just work on my machine
         return new DatabaseConnection(
-            'mysql:host=localhost;port=19909;',
-            'root',
-            'docker'
+            sprintf('mysql:host=%s;port=%d;', $_ENV['DB_HOST'], $_ENV['DB_PORT']),
+            $_ENV['DB_USER'],
+            $_ENV['DB_PASSWORD']
         );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Luma\Tests\Unit;
 
+use Dotenv\Dotenv;
 use Luma\DatabaseComponent\Model\Aurora;
 use Luma\DatabaseComponent\DatabaseConnection;
 use Luma\Tests\Classes\Article;
@@ -17,12 +18,20 @@ class AuroraTest extends TestCase
 
     protected DatabaseConnection $connection;
 
+    /**
+     * @return void
+     *
+     * @throws \Exception
+     */
     protected function setUp(): void
     {
+        $dotenv = Dotenv::createImmutable(dirname(__DIR__) . '/data');
+        $dotenv->load();
+
         $connection = new DatabaseConnection(
-            'mysql:host=localhost;port=19909;',
-            'root',
-            'docker'
+            sprintf('mysql:host=%s;port=%d;', $_ENV['DB_HOST'], $_ENV['DB_PORT']),
+            $_ENV['DB_USER'],
+            $_ENV['DB_PASSWORD']
         );
         Aurora::setDatabaseConnection($connection);
 
@@ -86,9 +95,7 @@ class AuroraTest extends TestCase
     {
         $this->assertEquals('id', Article::getPrimaryIdentifierPropertyName());
         $this->assertEquals('intArticleId', Article::getPrimaryIdentifierColumnName());
-
-        $this->expectException(\Exception::class);
-        InvalidAurora::getPrimaryIdentifierPropertyName();
+        $this->assertNull(InvalidAurora::getPrimaryIdentifierPropertyName());
     }
 
     /**
@@ -117,7 +124,7 @@ class AuroraTest extends TestCase
     public function testInsert(): void
     {
         $article = Article::make([
-            'title' => 'Created by AuroraTest::testInsert',
+            'title' => self::INSERT_MESSAGE,
             'author' => User::find(1),
         ])->save();
 

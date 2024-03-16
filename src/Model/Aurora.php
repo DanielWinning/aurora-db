@@ -14,8 +14,6 @@ class Aurora
 
     /**
      * @return int
-     *
-     * @throws \Exception
      */
     public function getId(): int
     {
@@ -44,8 +42,6 @@ class Aurora
      * @param int $id
      *
      * @return ?static
-     *
-     * @throws \Exception
      */
     public static function find(int $id): ?static
     {
@@ -56,8 +52,6 @@ class Aurora
 
     /**
      * @return ?static
-     *
-     * @throws \Exception
      */
     public static function getLatest(): ?static
     {
@@ -92,8 +86,6 @@ class Aurora
 
     /**
      * @return string
-     *
-     * @throws \Exception
      */
     private static function getFindQueryString(): string
     {
@@ -143,34 +135,32 @@ class Aurora
     }
 
     /**
-     * @return string
-     *
-     * @throws \Exception
+     * @return ?string
      */
-    public static function getPrimaryIdentifierPropertyName(): string
+    public static function getPrimaryIdentifierPropertyName(): ?string
     {
-        return static::getPrimaryIdentifier()[0];
+        $primaryIdentifier = static::getPrimaryIdentifier();
+
+        return $primaryIdentifier ? $primaryIdentifier[0] : null;
     }
 
     /**
      * Returns the name of the primary identifier column as seen in the database. Set using the #[Identifier] attribute
      * on your Aurora's primary key property. All Aurora models require an #[Identifier] attribute.
      *
-     * @return string
-     *
-     * @throws \Exception
+     * @return ?string
      */
-    public static function getPrimaryIdentifierColumnName(): string
+    public static function getPrimaryIdentifierColumnName(): ?string
     {
-        return static::getPrimaryIdentifier()[1];
+        $primaryIdentifier = static::getPrimaryIdentifier();
+
+        return $primaryIdentifier ? $primaryIdentifier[1] : null;
     }
 
     /**
-     * @return array
-     *
-     * @throws \Exception
+     * @return ?array
      */
-    private static function getPrimaryIdentifier(): array
+    private static function getPrimaryIdentifier(): ?array
     {
         $instance = new static();
         $reflector = new \ReflectionClass($instance);
@@ -193,7 +183,7 @@ class Aurora
             ];
         }
 
-        throw new \Exception('Invalid entity. Classes extending Aurora must contain an #[Identifier] attribute to set the primary key.');
+        return null;
     }
 
     /**
@@ -233,7 +223,10 @@ class Aurora
         return $attributes ? $attributes[0]->newInstance()->$propName : '';
     }
 
-    public function save()
+    /**
+     * @return $this
+     */
+    public function save(): static
     {
         if (isset($this->{static::getPrimaryIdentifierPropertyName()})) {
             return $this->update();
@@ -244,8 +237,6 @@ class Aurora
 
     /**
      * @return static
-     *
-     * @throws \Exception
      */
     private function insert(): static
     {
@@ -290,9 +281,7 @@ class Aurora
     }
 
     /**
-     * @return $this
-     *
-     * @throws \Exception
+     * @return static
      */
     private function update(): static
     {
@@ -335,8 +324,6 @@ class Aurora
 
     /**
      * @return bool
-     *
-     * @throws \Exception
      */
     public function delete(): bool
     {
@@ -347,6 +334,7 @@ class Aurora
         );
 
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+
         return $query->execute(['id' => $this->getId()]);
     }
 }

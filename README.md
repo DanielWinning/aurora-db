@@ -4,7 +4,7 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-0.1.0-blue" alt="Version 0.1.0">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-98.21%25-green" alt="PHP Coverage 98.21%">
+<img src="https://img.shields.io/badge/PHP Coverage-98.24%25-green" alt="PHP Coverage 98.24%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
@@ -56,7 +56,7 @@ CREATE TABLE Article (
 );
 ```
 
-We can create the following `Aurora` models which will allow us to create, retrieve and update records within these tables.
+We can create the following `Aurora` models which will allow us to create, retrieve, update and delete records within these tables.
 
 ```php
 use Luma\DatabaseComponent\Attributes\Column;
@@ -129,7 +129,7 @@ class Article extends Aurora
 
 All `Aurora` models have a `getId()` method which returns the value of the property with the `#[Identifier]` attribute. 
 **Identifiers must be `protected` and are required as part of a valid `Aurora` model.** All other properties which you
-also wish to map to a database column should use the `#[Column($name)` attribute.
+also wish to map to a database column should use the `#[Column($name)]` attribute.
 
 By default, the table name associated with your `Aurora` class will be the same name as your class - so `User` and `Article` in this case.
 In addition, no schema will be set for your class - output queries will look something like this `SELECT * FROM User ...`.
