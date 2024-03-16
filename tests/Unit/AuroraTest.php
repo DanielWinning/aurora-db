@@ -269,7 +269,7 @@ class AuroraTest extends TestCase
     /**
      * @return void
      */
-    public function testQueryBuilderWhere(): void
+    public function testWhereIs(): void
     {
         $extension = AuroraExtension::select()->whereIs('name', 'Extension Two')->get();
 
@@ -280,6 +280,22 @@ class AuroraTest extends TestCase
 
         $this->assertNull($extension);
 
+        $articles = Article::select()
+            ->whereIs('title', 'Test Article')
+            ->orderBy('id', 'DESC')
+            ->limit(5)
+            ->get();
+
+        $this->assertIsArray($articles);
+        $this->assertCount(5, $articles);
+        $this->assertGreaterThan($articles[1]->getId(), $articles[0]->getId());
+    }
+
+    /**
+     * @return void
+     */
+    public function testWhereIn(): void
+    {
         $extensions = AuroraExtension::select()
             ->whereIn('name', ['Extension Two', 'Extension Three'])
             ->get();
@@ -291,14 +307,26 @@ class AuroraTest extends TestCase
 
         $this->assertCount(2, $extensions);
         $this->assertEquals('Extension Three', $extensions[1]->getName());
+    }
 
+    /**
+     * @return void
+     */
+    public function testWhereNot(): void
+    {
         $extensions = AuroraExtension::select()->whereNot('id', 2)->get();
 
         $this->assertIsArray($extensions);
         $this->assertCount(2, $extensions);
         $this->assertEquals(1, $extensions[0]->getId());
         $this->assertEquals(3, $extensions[1]->getId());
+    }
 
+    /**
+     * @return void
+     */
+    public function testWhereNotIn(): void
+    {
         $extension = AuroraExtension::select()->whereNotIn('id', [1, 3])->get();
 
         $this->assertInstanceOf(AuroraExtension::class, $extension);

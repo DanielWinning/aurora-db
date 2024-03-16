@@ -274,6 +274,33 @@ class Aurora
     }
 
     /**
+     * @param string $column
+     * @param string $direction
+     *
+     * @return static
+     */
+    public function orderBy(string $column, string $direction = 'ASC'): static
+    {
+        $column = static::getColumnNameByReflection($column);
+
+        self::$queryString .= " ORDER BY {$column} {$direction}";
+
+        return new static;
+    }
+
+    /**
+     * @param int $limit
+     *
+     * @return static
+     */
+    public function limit(int $limit): static
+    {
+        self::$queryString .= " LIMIT {$limit}";
+
+        return new static;
+    }
+
+    /**
      * @return static|static[]|null
      */
     public function get(): static|array|null

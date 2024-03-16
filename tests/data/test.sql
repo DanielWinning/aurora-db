@@ -37,4 +37,23 @@ CREATE TABLE Article (
 INSERT INTO Article
     (strTitle, intAuthorId)
 VALUES
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
+    ('Test Article', 1),
     ('Test Article', 1);
