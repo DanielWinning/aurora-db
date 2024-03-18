@@ -379,7 +379,7 @@ class Aurora
      *
      * @return static
      */
-    public static function make(array $data): static
+    public static function create(array $data): static
     {
         $instance = new static();
         $reflector = new \ReflectionClass($instance);

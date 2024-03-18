@@ -2,7 +2,7 @@ CREATE DATABASE DatabaseComponentTest;
 
 USE DatabaseComponentTest;
 
-DROP TABLE IF EXISTS AuroraExtension, User, Article;
+DROP TABLE IF EXISTS AuroraExtension, User, Article, AddressDetails;
 
 CREATE TABLE AuroraExtension (
     id int primary key auto_increment not null,
@@ -58,3 +58,18 @@ VALUES
     ('Test Article', 1),
     ('Test Article', 1),
     ('Test Article', 1);
+
+CREATE TABLE AddressDetails (
+    intAddressDetailsId int auto_increment not null primary key,
+    strAddressLineOne varchar(255) not null,
+    strAddressLineTwo varchar(255),
+    strCity varchar(255) not null,
+    strPostcode varchar(255) not null,
+    intUserId int not null,
+    foreign key (intUserId) references User(intUserId)
+);
+
+INSERT INTO AddressDetails
+    (strAddressLineOne, strAddressLineTwo, strCity, strPostcode, intUserId)
+VALUES
+    ('1 Main Street', null, 'London', 'E1 1AB', 1);

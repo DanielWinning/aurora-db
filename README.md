@@ -2,7 +2,7 @@
 
 <div>
 <!-- Version Badge -->
-<img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version 1.0.0">
+<img src="https://img.shields.io/badge/Version-2.0.0-blue" alt="Version 2.0.0">
 <!-- PHP Coverage Badge -->
 <img src="https://img.shields.io/badge/PHP Coverage-98.60%25-green" alt="PHP Coverage 98.60%">
 <!-- License Badge -->
@@ -142,7 +142,15 @@ class Article extends Aurora
 
 All `Aurora` models have a `getId()` method which returns the value of the property with the `#[Identifier]` attribute. 
 **Identifiers must be `protected` and are required as part of a valid `Aurora` model.** All other properties which you
-also wish to map to a database column should use the `#[Column($name)]` attribute.
+also wish to map to a database column should use the `#[Column($name)]` attribute. 
+
+If your database table contains any nullable columns it is important to ensure that the associated property has been 
+type hinted as nullable:
+
+```php
+#[Column('myNullableColumn')]
+private ?string $nullableColumn;
+```
 
 By default, the table name associated with your `Aurora` class will be the same name as your class - so `User` and `Article` in this case.
 In addition, no schema will be set for your class - output queries will look something like this `SELECT * FROM User ...`.
@@ -163,7 +171,7 @@ Let's add some new records to the tables we created:
 
 ```php
 // Create a new user. Not yet saved to the database.
-$user = User::make([
+$user = User::create([
     'username' => 'Dan',
 ]);
 
@@ -171,7 +179,7 @@ $user = User::make([
 $user->save();
 
 // Create a new article and save to the database.
-Article::make([
+Article::create([
     'title' => 'Hello, Aurora!',
     'author' => $user,
 ])->save();

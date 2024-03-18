@@ -5,6 +5,7 @@ namespace Luma\Tests\Unit;
 use Dotenv\Dotenv;
 use Luma\AuroraDatabase\Model\Aurora;
 use Luma\AuroraDatabase\DatabaseConnection;
+use Luma\Tests\Classes\AddressDetails;
 use Luma\Tests\Classes\Article;
 use Luma\Tests\Classes\AuroraExtension;
 use Luma\Tests\Classes\InvalidAurora;
@@ -69,14 +70,18 @@ class AuroraTest extends TestCase
         $article = Article::find(99999999);
 
         $this->assertNull($article);
+
+        $addressDetails = AddressDetails::find(1);
+
+        $this->assertEquals('1 Main Street', $addressDetails->getAddressLineOne());
     }
 
     /**
      * @return User
      */
-    public function testMake(): User
+    public function testCreate(): User
     {
-        $user = User::make([
+        $user = User::create([
             'username' => 'Test User',
         ]);
 
@@ -123,12 +128,21 @@ class AuroraTest extends TestCase
      */
     public function testInsert(): void
     {
-        $article = Article::make([
+        $article = Article::create([
             'title' => self::INSERT_MESSAGE,
             'author' => User::find(1),
         ])->save();
 
         $this->assertIsNumeric($article->getId());
+
+        $addressDetails = AddressDetails::create([
+            'addressLineOne' => '2 Main Street',
+            'city' => 'London',
+            'postcode' => 'E1 1AB',
+            'user' => User::find(1),
+        ])->save();
+
+        $this->assertIsNumeric($addressDetails->getId());
     }
 
     /**
