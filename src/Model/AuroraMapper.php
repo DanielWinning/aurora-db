@@ -9,13 +9,15 @@ class AuroraMapper
     /**
      * Used internally to map PDO results to Aurora instances.
      *
-     * @param Aurora $aurora
+     * @param array $fetchData
+     * @param string $mapToClass
      *
-     * @return ?Aurora
+     * @return ?array
      */
-    public static function map(Aurora $aurora): ?Aurora
+    public static function map(array $fetchData, string $mapToClass): ?Aurora
     {
         try {
+            $aurora = new $mapToClass;
             $reflector = new \ReflectionClass($aurora);
 
             foreach ($reflector->getProperties() as $property) {
@@ -24,9 +26,7 @@ class AuroraMapper
                 if ($attribute) {
                     $columnName = $attribute->newInstance()->name;
 
-                    if ($columnName === $property->getName()) {
-                        continue;
-                    }
+                    if (!array_key_exists($columnName, $fetchData)) continue;
 
                     $propertyType = $property->getType();
 
@@ -34,20 +34,20 @@ class AuroraMapper
                         $propertyClass = $propertyType->getName();
 
                         if (is_subclass_of($propertyClass, Aurora::class)) {
-                            $associatedObject = $propertyClass::find($aurora->$columnName);
+                            $associatedObject = $propertyClass::find($fetchData[$columnName]);
                             $property->setValue($aurora, $associatedObject);
                         } else {
                             $implementsDateTimeInterface = in_array(\DateTimeInterface::class, class_implements($propertyClass));
 
                             if ($propertyClass === \DateTimeInterface::class || $implementsDateTimeInterface) {
-                                $property->setValue($aurora, new \DateTime($aurora->$columnName));
+                                $property->setValue($aurora, new \DateTime($fetchData[$columnName]));
                             }
                         }
                     } else {
-                        $property->setValue($aurora, $aurora->$columnName);
+                        $property->setValue($aurora, $fetchData[$columnName]);
                     }
 
-                    unset($aurora->$columnName);
+                    unset($fetchData[$columnName]);
                 }
             }
 

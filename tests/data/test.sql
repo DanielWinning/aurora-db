@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS DatabaseComponentTest;
+
 CREATE DATABASE DatabaseComponentTest;
 
 USE DatabaseComponentTest;

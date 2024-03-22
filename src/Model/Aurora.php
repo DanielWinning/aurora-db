@@ -328,7 +328,7 @@ class Aurora
         }
 
         $query->execute();
-        $query->setFetchMode(\PDO::FETCH_CLASS, static::class);
+        $query->setFetchMode(\PDO::FETCH_ASSOC);
 
         $result = $query->fetchAll();
 
@@ -337,11 +337,11 @@ class Aurora
         if (!$result) return null;
 
         if (count($result) === 1) {
-            return AuroraMapper::map($result[0]);
+            return AuroraMapper::map($result[0], static::class);
         }
 
-        return array_map(function(Aurora $aurora) {
-            return AuroraMapper::map($aurora);
+        return array_map(function(array $aurora) {
+            return AuroraMapper::map($aurora, static::class);
         }, $result);
     }
 

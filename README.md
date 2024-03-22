@@ -2,7 +2,7 @@
 
 <div>
 <!-- Version Badge -->
-<img src="https://img.shields.io/badge/Version-2.0.0-blue" alt="Version 2.0.0">
+<img src="https://img.shields.io/badge/Version-2.1.0-blue" alt="Version 2.1.0">
 <!-- PHP Coverage Badge -->
 <img src="https://img.shields.io/badge/PHP Coverage-98.60%25-green" alt="PHP Coverage 98.60%">
 <!-- License Badge -->
@@ -34,12 +34,17 @@ In your applications entrypoint, connect to your database:
 use Luma\AuroraDatabase\DatabaseConnection;
 use Luma\AuroraDatabase\Model\Aurora;
  
-$connection = new DatabaseConnection(
+$databaseConnection = new DatabaseConnection(
     'mysql:host=localhost;port=3306;',
     'username',
     'password'
 );
-Aurora::setDatabaseConnection($connection);
+```
+
+In its simplest form, we can use the above `DatabaseConnection` instance to get the `PDO` database connection:
+
+```php
+$pdo = $databaseConnection->getConnection();
 ```
 
 This allows you to use `Aurora` models to interact with your database via a single shared connection.
@@ -165,6 +170,7 @@ class User extends Aurora {
 }
 ```
 
+This would create/run queries that look something like this `SELECT * FROM Core.User ...`.
 ### CRUD Methods
 
 Let's add some new records to the tables we created:
