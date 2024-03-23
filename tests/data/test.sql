@@ -21,13 +21,17 @@ VALUES
 CREATE TABLE User (
     intUserId int primary key auto_increment not null,
     strUsername varchar(60) not null,
-    strEmailAddress varchar(255) not null
+    strEmailAddress varchar(255) not null,
+    strPassword varchar(255) not null,
+    dtmCreated datetime not null default now(),
+    unique key (strUsername),
+    unique key (strEmailAddress)
 );
 
 INSERT INTO User
-    (strUsername, strEmailAddress)
+    (strUsername, strEmailAddress, strPassword)
 VALUES
-    ('Danny', 'danny@test.com');
+    ('Danny', 'danny@test.com', '');
 
 CREATE TABLE Article (
     intArticleId int primary key auto_increment not null,

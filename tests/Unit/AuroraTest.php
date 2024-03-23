@@ -14,8 +14,8 @@ use PHPUnit\Framework\TestCase;
 
 class AuroraTest extends TestCase
 {
-    private const INSERT_MESSAGE = 'Created by AuroraTest::testInsert';
-    private const UPDATE_MESSAGE = 'Updated by AuroraTest::testUpdate';
+    private const string INSERT_MESSAGE = 'Created by AuroraTest::testInsert';
+    private const string UPDATE_MESSAGE = 'Updated by AuroraTest::testUpdate';
 
     protected DatabaseConnection $connection;
 
