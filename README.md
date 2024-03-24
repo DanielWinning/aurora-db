@@ -4,7 +4,7 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-2.1.0-blue" alt="Version 2.1.0">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-98.60%25-green" alt="PHP Coverage 98.60%">
+<img src="https://img.shields.io/badge/PHP Coverage-98.86%25-green" alt="PHP Coverage 98.86%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
@@ -16,6 +16,9 @@ The *small but mighty* PHP database component.
     - [The `Aurora` Model](#the-aurora-model)
         - [Create Database Tables](#create-database-tables)
         - [Create `Aurora` Classes](#create-aurora-classes)
+          - [Nullable Columns](#nullable-columns)
+          - [OneToMany Relationships](#onetomany-relationships)
+          - [Table & Schema](#table--schema)
         - [CRUD Methods](#crud-methods)
         - [Pagination](#pagination)
     - [Query Builder](#query-builder)
@@ -149,6 +152,7 @@ All `Aurora` models have a `getId()` method which returns the value of the prope
 **Identifiers must be `protected` and are required as part of a valid `Aurora` model.** All other properties which you
 also wish to map to a database column should use the `#[Column($name)]` attribute. 
 
+##### Nullable Columns
 If your database table contains any nullable columns it is important to ensure that the associated property has been 
 type hinted as nullable:
 
@@ -157,6 +161,27 @@ type hinted as nullable:
 private ?string $nullableColumn;
 ```
 
+##### OneToMany Relationships
+For handling one-to-many relationships, for example fetching all `Article` models created by a `User`, we can add a property
+to hold our articles (on the `User` model):
+
+```php
+#[AuroraCollection(class: Article::class, property: 'author')]
+private Collection $articles;
+
+/**
+ * @return Collection<Article>
+ */
+public function getArticles(): Collection
+{
+    return $this->articles;
+}
+```
+
+It's as simple as that, now calling `getArticles()` from a `User` instance will return a `Collection` containing all the 
+articles written by that user.
+
+##### Table & Schema
 By default, the table name associated with your `Aurora` class will be the same name as your class - so `User` and `Article` in this case.
 In addition, no schema will be set for your class - output queries will look something like this `SELECT * FROM User ...`.
 

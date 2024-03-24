@@ -72,7 +72,7 @@ class Aurora
                 $reflector = new \ReflectionClass(static::class);
                 $property = $reflector->getProperty($orderBy);
                 $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
-                $columnName = $columnAttribute ? $columnAttribute->newInstance()->name : $orderBy;
+                $columnName = $columnAttribute ? $columnAttribute->newInstance()->getName() : $orderBy;
                 $sql .= sprintf(' ORDER BY %s %s', $columnName, $orderDirection ?? 'ASC');
             } catch (\ReflectionException $exception) {
                 error_log($exception->getMessage());
@@ -130,7 +130,7 @@ class Aurora
             throw new \Exception("Property {$property} does not exist or does not have a Column attribute.");
         }
 
-        $columnName = $columnAttribute->newInstance()->name;
+        $columnName = $columnAttribute->newInstance()->getName();
 
         $sql = sprintf(
             'SELECT * FROM %s WHERE %s = :value LIMIT 1',
@@ -512,7 +512,7 @@ class Aurora
 
             if ($columnAttribute && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
                 $columnAttribute = $columnAttribute->newInstance();
-                $columnName = $columnAttribute->name;
+                $columnName = $columnAttribute->getName();
 
                 if (!$property->isInitialized($this)) {
                     continue;
@@ -560,7 +560,7 @@ class Aurora
             $column = $property->getAttributes(Column::class)[0] ?? null;
 
             if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
-                $columnName = $column->newInstance()->name;
+                $columnName = $column->newInstance()->getName();
                 $columns[] = $columnName . ' = :' . $columnName;
 
                 $value = $property->getValue($this);
@@ -609,6 +609,20 @@ class Aurora
     }
 
     /**
+     * @param array $associations
+     *
+     * @return $this
+     */
+    public function with(array $associations): static
+    {
+        foreach ($associations as $association) {
+            AuroraMapper::fetchAssociated($this);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param string $propertyName
      *
      * @return string
@@ -619,7 +633,7 @@ class Aurora
             $reflector = new \ReflectionProperty(static::class, $propertyName);
             $columnAttribute = $reflector->getAttributes(Column::class)[0] ?? null;
 
-            return $columnAttribute ? $columnAttribute->newInstance()->name : $propertyName;
+            return $columnAttribute ? $columnAttribute->newInstance()->getName() : $propertyName;
         } catch (\ReflectionException $exception) {
             return $propertyName;
         }
