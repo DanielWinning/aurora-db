@@ -31,7 +31,6 @@ class AuroraMapper
                 if (!$columnAttribute) continue;
 
                 $aurora = self::handleColumnAttribute($columnAttribute, $fetchData, $property, $aurora);
-                //$aurora = self::handleAuroraCollectionAttribute($auroraCollectionAttribute, $property, $aurora);
             }
 
             return $aurora;
