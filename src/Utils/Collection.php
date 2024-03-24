@@ -83,4 +83,28 @@ class Collection implements \IteratorAggregate, \Countable
     {
         return count($this->items);
     }
+
+    /**
+     * @param callable $callback
+     *
+     * @return mixed
+     */
+    public function find(callable $callback): mixed
+    {
+        foreach ($this->items as $item) {
+            if ($callback($item)) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return $this->items;
+    }
 }

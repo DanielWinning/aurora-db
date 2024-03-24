@@ -6,6 +6,7 @@ use Dotenv\Dotenv;
 use Luma\AuroraDatabase\DatabaseConnection;
 use Luma\AuroraDatabase\Model\Aurora;
 use Luma\AuroraDatabase\Utils\Collection;
+use Luma\Tests\Classes\User;
 use PHPUnit\Framework\TestCase;
 
 class CollectionTest extends TestCase
@@ -74,5 +75,86 @@ class CollectionTest extends TestCase
         $collection->remove(1);
 
         $this->assertNull($collection->first());
+    }
+
+    /**
+     * @param array $data
+     * @param callable $searchMethod
+     * @param mixed $expected
+     *
+     * @return void
+     *
+     * @dataProvider collectionSearchDataProvider
+     */
+    public function testFind(array $data, callable $searchMethod, mixed $expected): void
+    {
+        $collection = new Collection($data);
+
+        $this->assertEquals($expected, $collection->find($searchMethod));
+    }
+
+    /**
+     * @return void
+     */
+    public function testToArray(): void
+    {
+        $array = ['a' => 1,'b' => 2,'c' => 3];
+        $collection = new Collection($array);
+
+        $this->assertEquals($array, $collection->toArray());
+    }
+
+    /**
+     * @return array[]
+     */
+    public static function collectionSearchDataProvider(): array
+    {
+        return [
+            [
+                'data' => [
+                    1,
+                    [
+                        'hello' => 'world',
+                    ],
+                    'string',
+                ],
+                'searchMethod' => function ($item) {
+                    return $item === 1;
+                },
+                'expected' => 1,
+            ],
+            [
+                'data' => [
+                    1,
+                    [
+                        'hello' => 'world',
+                    ],
+                    'string',
+                ],
+                'searchMethod' => function ($item) {
+                    if (is_array($item) && array_key_exists('hello', $item)) {
+                        return true;
+                    }
+
+                    return false;
+                },
+                'expected' => [
+                    'hello' => 'world',
+                ],
+            ],
+            [
+                'data' => [
+                    1,
+                    [
+                        'hello' => 'world',
+                    ],
+                    'string',
+                ],
+                'searchMethod' => function ($item) {
+                    return $item === 7;
+                },
+                'expected' => null,
+            ],
+        ];
     }
 }
