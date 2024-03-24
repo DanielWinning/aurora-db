@@ -609,6 +609,20 @@ class Aurora
     }
 
     /**
+     * @param array $associations
+     *
+     * @return $this
+     */
+    public function with(array $associations): static
+    {
+        foreach ($associations as $association) {
+            AuroraMapper::fetchAssociated($this);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param string $propertyName
      *
      * @return string

@@ -28,6 +28,9 @@ class User extends Aurora
     #[Column('dtmCreated')]
     private \DateTimeInterface $created;
 
+    /**
+     * @var Collection<Article>
+     */
     #[AuroraCollection(class: Article::class, property: 'author')]
     private Collection $articles;
 

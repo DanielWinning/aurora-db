@@ -8,6 +8,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Added
 - Added new `Collection` class
+- Added new `AuroraCollection` attribute
+- Added basic handling for OneToMany by way of the `AuroraCollection` attribute and appropriate property setup
+- Can now call the `->with([AssociatedClass::class])` method to fetch associated models
 
 ### Changed
 - N/A

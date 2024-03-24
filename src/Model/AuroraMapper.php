@@ -26,12 +26,12 @@ class AuroraMapper
             $reflector = new \ReflectionClass($aurora);
 
             foreach ($reflector->getProperties() as $property) {
-                [$columnAttribute, $auroraCollectionAttribute] = self::getAttributes($property);
+                [$columnAttribute] = self::getAttributes($property);
 
-                if (!$columnAttribute && !$auroraCollectionAttribute) continue;
+                if (!$columnAttribute) continue;
 
                 $aurora = self::handleColumnAttribute($columnAttribute, $fetchData, $property, $aurora);
-                $aurora = self::handleAuroraCollectionAttribute($auroraCollectionAttribute, $property, $aurora);
+                //$aurora = self::handleAuroraCollectionAttribute($auroraCollectionAttribute, $property, $aurora);
             }
 
             return $aurora;
@@ -51,7 +51,6 @@ class AuroraMapper
     {
         return [
             $property->getAttributes(Column::class)[0] ?? null,
-            $property->getAttributes(AuroraCollection::class)[0] ?? null,
         ];
     }
 
@@ -105,38 +104,43 @@ class AuroraMapper
     }
 
     /**
-     * @param \ReflectionAttribute|null $attribute
-     * @param \ReflectionProperty $property
      * @param Aurora $aurora
      *
      * @return Aurora
      */
-    private static function handleAuroraCollectionAttribute(
-        ?\ReflectionAttribute $attribute,
-        \ReflectionProperty $property,
+    public static function fetchAssociated(
         Aurora &$aurora
     ): Aurora {
-        if (!$attribute) return $aurora;
+        $reflector = new \ReflectionClass($aurora);
 
-        $propertyType = $property->getType();
-        $propertyClass = $propertyType->getName();
+        foreach ($reflector->getProperties() as $property) {
+            $attribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
 
-        if ($propertyClass !== Collection::class) return $aurora;
+            if (!$attribute) continue;
 
-        $attributeInstance = $attribute->newInstance();
+            $propertyType = $property->getType();
+            $propertyClass = $propertyType->getName();
 
-        $associatedClass = $attributeInstance->getReferenceClass();
-        $associatedClassProperty = $attributeInstance->getReferenceProperty();
+            if ($propertyClass !== Collection::class) continue;
 
-        if (is_subclass_of($associatedClass, Aurora::class)) {
-            if (in_array($associatedClass, self::$processedClasses)) {
-                return $aurora;
+            $attributeInstance = $attribute->newInstance();
+
+            $associatedClass = $attributeInstance->getReferenceClass();
+            $associatedClassProperty = $attributeInstance->getReferenceProperty();
+
+            if (is_subclass_of($associatedClass, Aurora::class)) {
+                if (in_array($associatedClass, self::$processedClasses)) {
+                    return $aurora;
+                }
+
+                self::$processedClasses[] = $associatedClass;
+                self::$parent = $aurora;
+
+                $associatedObjects = $associatedClass::select()->whereIs($associatedClassProperty, $aurora->getId())->get();
+                $property->setValue($aurora, $associatedObjects ? new Collection($associatedObjects) : new Collection([]));
+
+                self::$parent = null;
             }
-            self::$processedClasses[] = $associatedClass;
-            self::$parent = $aurora;
-            $associatedObjects = $associatedClass::select()->whereIs($associatedClassProperty, $aurora->getId())->get();
-            $property->setValue($aurora, $associatedObjects ? new Collection($associatedObjects) : new Collection([]));
-            self::$parent = null;
         }
 
         return $aurora;

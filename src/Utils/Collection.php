@@ -2,7 +2,7 @@
 
 namespace Luma\AuroraDatabase\Utils;
 
-class Collection implements \IteratorAggregate
+class Collection implements \IteratorAggregate, \Countable
 {
     protected array $items;
 
@@ -73,5 +73,14 @@ class Collection implements \IteratorAggregate
         return count($this->items)
             ? end($this->items)
             : null;
+    }
+
+    /**
+     * @return int
+     */
+    #[\Override]
+    public function count(): int
+    {
+        return count($this->items);
     }
 }
