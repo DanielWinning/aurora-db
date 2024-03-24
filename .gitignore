@@ -2,6 +2,7 @@
 /vendor
 /node_modules
 /coverage
-.phpunit.result.cache
+/.phpunit.result.cache
 /tests/data/.env
 /public
+/test.php

@@ -5,6 +5,7 @@ namespace Luma\Tests\Unit;
 use Dotenv\Dotenv;
 use Luma\AuroraDatabase\Model\Aurora;
 use Luma\AuroraDatabase\DatabaseConnection;
+use Luma\AuroraDatabase\Utils\Collection;
 use Luma\Tests\Classes\AddressDetails;
 use Luma\Tests\Classes\Article;
 use Luma\Tests\Classes\AuroraExtension;
@@ -14,8 +15,8 @@ use PHPUnit\Framework\TestCase;
 
 class AuroraTest extends TestCase
 {
-    private const INSERT_MESSAGE = 'Created by AuroraTest::testInsert';
-    private const UPDATE_MESSAGE = 'Updated by AuroraTest::testUpdate';
+    private const string INSERT_MESSAGE = 'Created by AuroraTest::testInsert';
+    private const string UPDATE_MESSAGE = 'Updated by AuroraTest::testUpdate';
 
     protected DatabaseConnection $connection;
 
@@ -345,5 +346,24 @@ class AuroraTest extends TestCase
 
         $this->assertInstanceOf(AuroraExtension::class, $extension);
         $this->assertEquals(2, $extension->getId());
+    }
+
+    /**
+     * @return void
+     */
+    public function testWith()
+    {
+        $user = User::find(1);
+
+        $this->assertInstanceOf(Aurora::class, $user);
+
+        $articlesOne = $user->with([Article::class])->getArticles();
+
+        $this->assertInstanceOf(Collection::class, $articlesOne);
+        $this->assertInstanceOf(Article::class, $articlesOne->first());
+
+        $articlesTwo = $user->with([Article::class])->getArticles();
+
+        $this->assertEquals($articlesOne->count(), $articlesTwo->count());
     }
 }
