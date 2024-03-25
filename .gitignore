@@ -5,4 +5,3 @@
 /.phpunit.result.cache
 /tests/data/.env
 /public
-/test.php

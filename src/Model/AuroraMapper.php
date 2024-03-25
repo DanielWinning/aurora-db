@@ -127,7 +127,7 @@ class AuroraMapper
             $associatedClass = $attributeInstance->getReferenceClass();
             $associatedClassProperty = $attributeInstance->getReferenceProperty();
 
-            if (is_subclass_of($associatedClass, Aurora::class)) {
+            if (is_subclass_of($associatedClass, Aurora::class) && $associatedClassProperty) {
                 if (in_array($associatedClass, self::$processedClasses)) {
                     return $aurora;
                 }
@@ -139,6 +139,48 @@ class AuroraMapper
                 $property->setValue($aurora, $associatedObjects ? new Collection($associatedObjects) : new Collection([]));
 
                 self::$parent = null;
+            } else {
+                $pivotTable = $attributeInstance->getPivotTable();
+                $pivotColumn = $attributeInstance->getPivotColumn();
+
+                if (!$pivotTable || !$pivotColumn) {
+                    continue;
+                }
+
+                $associatedReflector = new \ReflectionClass($associatedClass);
+                $associatedReflectorInstance = $associatedReflector->newInstance();
+                $getAssociatedPrimaryIdentifierColumnName = $associatedReflector->getMethod('getPrimaryIdentifierColumnName');
+                $getPrimaryIdentifierColumnName = $reflector->getMethod('getPrimaryIdentifierColumnName');
+
+                $sql = sprintf(
+                    'SELECT %s FROM %s WHERE %s = %d',
+                    $getAssociatedPrimaryIdentifierColumnName->invoke($associatedReflectorInstance),
+                    $associatedReflectorInstance::getSchema() ? $associatedReflectorInstance::getSchema() . '.' . $pivotTable : $pivotTable,
+                    $getPrimaryIdentifierColumnName->invoke($reflector),
+                    $aurora->getId()
+                );
+
+                $associatedIdsQuery = Aurora::getDatabaseConnection()->getConnection()->prepare($sql);
+                $associatedIdsQuery->execute();
+                $associatedIdsQuery->setFetchMode(\PDO::FETCH_NUM);
+
+                $associatedIds = $associatedIdsQuery->fetchAll();
+                $associatedIds = array_map(function (array $id) {
+                    return $id[0];
+                }, $associatedIds);
+
+                $associatedObjects = $associatedClass::select()->whereIn('id', $associatedIds)->get();
+
+                $property->setValue(
+                    $aurora,
+                    is_array($associatedObjects)
+                        ? new Collection($associatedObjects)
+                        : (
+                            $associatedObjects instanceof Aurora
+                                ? new Collection([$associatedObjects])
+                                : new Collection([])
+                    )
+                );
             }
         }
 

@@ -1,6 +1,8 @@
 DROP DATABASE IF EXISTS DatabaseComponentTest;
+DROP DATABASE IF EXISTS Security;
 
 CREATE DATABASE DatabaseComponentTest;
+CREATE DATABASE Security;
 
 USE DatabaseComponentTest;
 
@@ -79,3 +81,24 @@ INSERT INTO AddressDetails
     (strAddressLineOne, strAddressLineTwo, strCity, strPostcode, intUserId)
 VALUES
     ('1 Main Street', null, 'London', 'E1 1AB', 1);
+
+USE Security;
+
+CREATE TABLE tblRole (
+    intRoleId INT(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    strRoleName VARCHAR(110) NOT NULL UNIQUE,
+    strRoleHandle VARCHAR(110) NOT NULL UNIQUE
+);
+
+CREATE TABLE tblPermission (
+    intPermissionId INT(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    strPermissionName VARCHAR(110) NOT NULL UNIQUE,
+    strPermissionHandle VARCHAR(110) NOT NULL UNIQUE
+);
+
+CREATE TABLE tblPermissionRole (
+    intPermissionId INT(11) UNSIGNED NOT NULL,
+    intRoleId INT(11) UNSIGNED NOT NULL,
+    FOREIGN KEY (intPermissionId) REFERENCES tblPermission(intPermissionId),
+    FOREIGN KEY (intRoleId) REFERENCES tblRole(intRoleId)
+);
