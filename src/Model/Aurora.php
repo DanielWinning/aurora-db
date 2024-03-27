@@ -503,6 +503,42 @@ class Aurora
         }
     }
 
+    private function buildColumnInserts(array &$columns, array &$values, array &$params, \ReflectionProperty $property, string $columnName)
+    {
+        $columns[] = $columnName;
+        $values[] = ':' . $columnName;
+        $value = $property->getValue($this);
+
+        if ($value instanceof Aurora) {
+            $value = $value->getId();
+        }
+
+        $params[$columnName] = $value;
+    }
+
+    /**
+     * @param array $columns
+     * @param array $values
+     * @param array $params
+     *
+     * @return void
+     */
+    private function executeInsertQuery(array $columns, array $values, array $params): void
+    {
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            static::getSchemaAndTableCombined(),
+            implode(',', $columns),
+            implode(',', $values)
+        );
+
+        $query = static::$connection->getConnection()->prepare($sql);
+        $query->execute($params);
+
+        $this->{static::getPrimaryIdentifierPropertyName()}
+            = static::getDatabaseConnection()->getConnection()->lastInsertId();
+    }
+
     /**
      * @return static|null
      *
@@ -527,31 +563,12 @@ class Aurora
                 if (!$property->isInitialized($this)) {
                     continue;
                 } else {
-                    $columns[] = $columnName;
-                    $values[] = ':' . $columnName;
-                    $value = $property->getValue($this);
-
-                    if ($value instanceof Aurora) {
-                        $value = $value->getId();
-                    }
-
-                    $params[$columnName] = $value;
+                    $this->buildColumnInserts($columns, $values, $params, $property, $columnName);
                 }
             }
         }
 
-        $sql = sprintf(
-            'INSERT INTO %s (%s) VALUES (%s)',
-            static::getSchemaAndTableCombined(),
-            implode(',', $columns),
-            implode(',', $values)
-        );
-
-        $query = static::$connection->getConnection()->prepare($sql);
-        $query->execute($params);
-
-        $this->{static::getPrimaryIdentifierPropertyName()}
-            = static::getDatabaseConnection()->getConnection()->lastInsertId();
+        $this->executeInsertQuery($columns, $values, $params);
 
         $pivotInserts = [];
 
@@ -573,14 +590,21 @@ class Aurora
                     continue;
                 }
 
-                foreach ($property->getValue($this) as $collectionItem) {
-                    if (!$collectionItem instanceof Aurora) {
-                        continue;
-                    }
+                $incorrectTypeFound = false;
 
-                    $collectionItem = $collectionItem->save();
-                    $pivotInserts[] = $collectionItem->getId();
+                if ($property->isInitialized($this)) {
+                    foreach ($property->getValue($this) as $collectionItem) {
+                        if (!$collectionItem instanceof Aurora) {
+                            $incorrectTypeFound = true;
+                            continue;
+                        }
+
+                        $collectionItem = $collectionItem->save();
+                        $pivotInserts[] = $collectionItem->getId();
+                    }
                 }
+
+                if ($incorrectTypeFound || !count($pivotInserts)) continue;
 
                 $pivotInsertString = '';
 
@@ -686,6 +710,10 @@ class Aurora
             $auroraCollectionAttributeInstance = $auroraCollectionAttribute->newInstance();
             $pivotTable = $auroraCollectionAttributeInstance->getPivotTable();
 
+            if (!$pivotTable) {
+                continue;
+            }
+
             $sql = sprintf(
                 'DELETE FROM %s WHERE %s = %d',
                 static::getSchema() ? static::getSchema() . '.' . $pivotTable : $pivotTable,
@@ -705,7 +733,7 @@ class Aurora
     public function with(array $associations): static
     {
         foreach ($associations as $association) {
-            AuroraMapper::fetchAssociated($this);
+            AuroraMapper::fetchAssociated($this, $association);
         }
 
         return $this;

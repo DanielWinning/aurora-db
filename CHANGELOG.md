@@ -7,7 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### Added
-- N/A
+- Added support for `ManyToMany` relationships - relates to issue [#3](https://github.com/DanielWinning/aurora-db/issues/3)
 
 ### Changed
 - N/A

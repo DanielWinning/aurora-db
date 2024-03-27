@@ -24,10 +24,27 @@ class Role extends Aurora
     #[Column('strRoleHandle')]
     private string $handle;
 
+    #[AuroraCollection(User::class, 'intUserId', 'Security', 'tblPermissionRole', 'intPermissionId')]
+    private array $invalidAuroraCollectionArray;
+
+    #[AuroraCollection(User::class, 'intUserId')]
+    private Collection $invalidAuroraCollection;
+
+    #[AuroraCollection(User::class)]
+    private Collection $secondaryInvalidAuroraCollection;
+
+    #[AuroraCollection(User::class, null, 'Security', 'tblUserRole')]
+    private Collection $users;
+
     /**
      * @var Collection<Permission>
      */
-    #[AuroraCollection(class: Permission::class, pivotTable: 'tblPermissionRole', pivotColumn: 'intPermissionId')]
+    #[AuroraCollection(
+        class: Permission::class,
+        pivotSchema: 'Security',
+        pivotTable: 'tblPermissionRole',
+        pivotColumn: 'intPermissionId'
+    )]
     private Collection $permissions;
 
     /**

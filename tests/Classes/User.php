@@ -34,6 +34,14 @@ class User extends Aurora
     #[AuroraCollection(class: Article::class, property: 'author')]
     private Collection $articles;
 
+    #[AuroraCollection(
+        class: Role::class,
+        pivotSchema: 'Security',
+        pivotTable: 'tblUserRole',
+        pivotColumn: 'intRoleId'
+    )]
+    private Collection $roles;
+
     /**
      * @return string
      */

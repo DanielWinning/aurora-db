@@ -429,9 +429,22 @@ class AuroraTest extends TestCase
             'name' => 'Administrator',
             'handle' => 'admin',
             'permissions' => new Collection([$permission]),
-        ])->save()->with([Permission::class]);
+        ])->save();
+
         $this->assertIsNumeric($permission->getId());
 
+        $roleFromDatabase = Role::select()->whereIs('handle', 'admin')
+            ->get()
+            ->with([Permission::class]);
+        $this->assertInstanceOf(Collection::class, $roleFromDatabase->getPermissions());
+
+        $newRole = Role::create([
+            'name' => 'Default',
+            'handle' => 'default',
+            'permissions' => new Collection([1]),
+        ])->save();
+
+        $newRole->delete();
         $role->delete();
         $permission->delete();
     }
