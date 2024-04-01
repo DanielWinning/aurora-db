@@ -503,8 +503,22 @@ class Aurora
         }
     }
 
-    private function buildColumnInserts(array &$columns, array &$values, array &$params, \ReflectionProperty $property, string $columnName)
-    {
+    /**
+     * @param array $columns
+     * @param array $values
+     * @param array $params
+     * @param \ReflectionProperty $property
+     * @param string $columnName
+     *
+     * @return void
+     */
+    private function buildColumnInserts(
+        array &$columns,
+        array &$values,
+        array &$params,
+        \ReflectionProperty $property,
+        string $columnName
+    ): void{
         $columns[] = $columnName;
         $values[] = ':' . $columnName;
         $value = $property->getValue($this);
@@ -583,10 +597,11 @@ class Aurora
                     continue;
                 }
 
+                $pivotSchema = $auroraCollectionAttribute->getPivotSchema();
                 $pivotTable = $auroraCollectionAttribute->getPivotTable();
                 $pivotColumn = $auroraCollectionAttribute->getPivotColumn();
 
-                if (!$pivotTable || !$pivotColumn) {
+                if (!$pivotTable || !$pivotColumn || !$pivotSchema) {
                     continue;
                 }
 
@@ -619,7 +634,7 @@ class Aurora
 
                 $sql = sprintf(
                     'INSERT INTO %s (%s) VALUES %s',
-                    self::getSchema() ? self::getSchema() . '.' . $pivotTable : $pivotTable,
+                    $pivotSchema . '.' . $pivotTable,
                     self::getPrimaryIdentifierColumnName() . ',' . $pivotColumn,
                     $pivotInsertString
                 );
@@ -642,10 +657,11 @@ class Aurora
         $params = [];
 
         foreach ($reflector->getProperties() as $property) {
-            $column = $property->getAttributes(Column::class)[0] ?? null;
+            $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
+            $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
 
-            if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
-                $columnName = $column->newInstance()->getName();
+            if ($columnAttribute && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
+                $columnName = $columnAttribute->newInstance()->getName();
                 $columns[] = $columnName . ' = :' . $columnName;
 
                 $value = $property->getValue($this);
@@ -659,6 +675,71 @@ class Aurora
                 }
 
                 $params[$columnName] = $value;
+            }
+
+            if ($auroraCollectionAttribute) {
+                if (!$property->isInitialized($this)) continue;
+
+                $auroraCollectionAttribute = $auroraCollectionAttribute->newInstance();
+                $associatedProperty = $auroraCollectionAttribute->getReferenceProperty();
+
+                if ($associatedProperty) {
+                    continue;
+                }
+
+                $pivotTable = $auroraCollectionAttribute->getPivotTable();
+                $pivotColumn = $auroraCollectionAttribute->getPivotColumn();
+                $pivotSchema = $auroraCollectionAttribute->getPivotSchema();
+
+                if (!$pivotTable || !$pivotColumn || !$pivotSchema) {
+                    continue;
+                }
+
+                $ids = [];
+
+                foreach ($property->getValue($this) as $associated) {
+                    $ids[] = $associated->save()->getId();
+                }
+
+                $associatedSearchQuery = sprintf(
+                    'SELECT %s FROM %s WHERE %s IN (%s) AND %s = %d',
+                    $pivotColumn,
+                    sprintf('%s.%s', $pivotSchema, $pivotTable),
+                    $pivotColumn,
+                    implode(',', $ids),
+                    self::getPrimaryIdentifierColumnName(),
+                    $this->getId()
+                );
+                $query = static::getDatabaseConnection()->getConnection()->prepare($associatedSearchQuery);
+                $query->setFetchMode(\PDO::FETCH_ASSOC);
+                $query->execute();
+
+                $existingAssociations = array_map(function ($result) use ($pivotColumn) {
+                    return $result[$pivotColumn];
+                }, $query->fetchAll());
+                $pivotInsertString = '';
+                $ids = array_values(array_diff($ids, $existingAssociations));
+
+                if (count($ids)) {
+                    foreach ($ids as $index => $id) {
+                        $pivotInsertString .= sprintf(
+                            '(%d,%d)%s',
+                            self::getId(),
+                            $id,
+                            $index === count($ids) - 1 ? ';' : ','
+                        );
+                    }
+
+                    $pivotInsertQuery = sprintf(
+                        'INSERT INTO %s (%s) VALUES %s',
+                        sprintf('%s.%s', $pivotSchema, $pivotTable),
+                        self::getPrimaryIdentifierColumnName() . ',' . $pivotColumn,
+                        $pivotInsertString
+                    );
+
+                    $associatedInsertQuery = self::getDatabaseConnection()->getConnection()->prepare($pivotInsertQuery);
+                    $associatedInsertQuery->execute();
+                }
             }
         }
 
@@ -708,15 +789,16 @@ class Aurora
             if (!$auroraCollectionAttribute) continue;
 
             $auroraCollectionAttributeInstance = $auroraCollectionAttribute->newInstance();
+            $pivotSchema = $auroraCollectionAttributeInstance->getPivotSchema();
             $pivotTable = $auroraCollectionAttributeInstance->getPivotTable();
 
-            if (!$pivotTable) {
+            if (!$pivotTable || !$pivotSchema) {
                 continue;
             }
 
             $sql = sprintf(
                 'DELETE FROM %s WHERE %s = %d',
-                static::getSchema() ? static::getSchema() . '.' . $pivotTable : $pivotTable,
+                $pivotSchema . '.' . $pivotTable,
                 static::getPrimaryIdentifierColumnName(),
                 $this->getId()
             );

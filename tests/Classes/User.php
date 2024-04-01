@@ -59,10 +59,18 @@ class User extends Aurora
     }
 
     /**
-     * @return Collection<Article>
+     * @return Collection<int, Article>
      */
     public function getArticles(): Collection
     {
         return $this->articles;
+    }
+
+    /**
+     * @return Collection<int, Role>
+     */
+    public function getRoles(): Collection
+    {
+        return $this->roles;
     }
 }

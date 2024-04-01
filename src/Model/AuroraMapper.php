@@ -170,22 +170,26 @@ class AuroraMapper
                     $associatedIdsQuery->setFetchMode(\PDO::FETCH_NUM);
 
                     $associatedIds = $associatedIdsQuery->fetchAll();
-                    $associatedIds = array_map(function (array $id) {
-                        return $id[0];
-                    }, $associatedIds);
+                    if (count($associatedIds)) {
+                        $associatedIds = array_map(function (array $id) {
+                            return $id[0];
+                        }, $associatedIds);
 
-                    $associatedObjects = $associatedClass::select()->whereIn('id', $associatedIds)->get();
+                        $associatedObjects = $associatedClass::select()->whereIn('id', $associatedIds)->get();
 
-                    $property->setValue(
-                        $aurora,
-                        is_array($associatedObjects)
-                            ? new Collection($associatedObjects)
-                            : (
-                        $associatedObjects instanceof Aurora
-                            ? new Collection([$associatedObjects])
-                            : new Collection([])
-                        )
-                    );
+                        $property->setValue(
+                            $aurora,
+                            is_array($associatedObjects)
+                                ? new Collection($associatedObjects)
+                                : (
+                            $associatedObjects instanceof Aurora
+                                ? new Collection([$associatedObjects])
+                                : new Collection([])
+                            )
+                        );
+                    } else {
+                        $property->setValue($aurora, new Collection());
+                    }
                 } catch (\ReflectionException $exception) {
                     error_log($exception);
 
