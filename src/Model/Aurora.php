@@ -2,11 +2,13 @@
 
 namespace Luma\AuroraDatabase\Model;
 
+use Luma\AuroraDatabase\Attributes\AuroraCollection;
 use Luma\AuroraDatabase\Attributes\Column;
 use Luma\AuroraDatabase\Attributes\Identifier;
 use Luma\AuroraDatabase\Attributes\Schema;
 use Luma\AuroraDatabase\Attributes\Table;
 use Luma\AuroraDatabase\DatabaseConnection;
+use Luma\AuroraDatabase\Utils\Collection;
 
 class Aurora
 {
@@ -56,9 +58,9 @@ class Aurora
      * @param string|null $orderBy
      * @param string|null $orderDirection
      *
-     * @return static[]|null
+     * @return Collection<static>|null
      */
-    public static function paginate(int $page = 1, int $perPage = 10, string $orderBy = null, string $orderDirection = null): null|array
+    public static function paginate(int $page = 1, int $perPage = 10, string $orderBy = null, string $orderDirection = null): null|Collection
     {
         $offset = ($page - 1) * $perPage;
 
@@ -80,8 +82,13 @@ class Aurora
         }
 
         $sql = sprintf('%s LIMIT %d OFFSET %d', $sql, $perPage, $offset);
+        $result = static::executeQuery($sql);
 
-        return static::executeQuery($sql);
+        if (!$result) return null;
+
+        if (is_array($result)) return new Collection($result);
+
+        return new Collection([$result]);
     }
 
     /**
@@ -497,39 +504,41 @@ class Aurora
     }
 
     /**
-     * @return static|null
+     * @param array $columns
+     * @param array $values
+     * @param array $params
+     * @param \ReflectionProperty $property
+     * @param string $columnName
+     *
+     * @return void
      */
-    private function insert(): static|null
-    {
-        $reflector = new \ReflectionClass($this);
+    private function buildColumnInserts(
+        array &$columns,
+        array &$values,
+        array &$params,
+        \ReflectionProperty $property,
+        string $columnName
+    ): void{
+        $columns[] = $columnName;
+        $values[] = ':' . $columnName;
+        $value = $property->getValue($this);
 
-        $columns = [];
-        $values = [];
-        $params = [];
-
-        foreach ($reflector->getProperties() as $property) {
-            $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
-
-            if ($columnAttribute && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
-                $columnAttribute = $columnAttribute->newInstance();
-                $columnName = $columnAttribute->getName();
-
-                if (!$property->isInitialized($this)) {
-                    continue;
-                } else {
-                    $columns[] = $columnName;
-                    $values[] = ':' . $columnName;
-                    $value = $property->getValue($this);
-
-                    if ($value instanceof Aurora) {
-                        $value = $value->getId();
-                    }
-
-                    $params[$columnName] = $value;
-                }
-            }
+        if ($value instanceof Aurora) {
+            $value = $value->getId();
         }
 
+        $params[$columnName] = $value;
+    }
+
+    /**
+     * @param array $columns
+     * @param array $values
+     * @param array $params
+     *
+     * @return void
+     */
+    private function executeInsertQuery(array $columns, array $values, array $params): void
+    {
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
             static::getSchemaAndTableCombined(),
@@ -542,6 +551,85 @@ class Aurora
 
         $this->{static::getPrimaryIdentifierPropertyName()}
             = static::getDatabaseConnection()->getConnection()->lastInsertId();
+    }
+
+    /**
+     * @return static|null
+     *
+     * @throws \ReflectionException
+     */
+    private function insert(): static|null
+    {
+        $reflector = new \ReflectionClass($this);
+
+        $columns = [];
+        $values = [];
+        $params = [];
+
+        foreach ($reflector->getProperties() as $property) {
+            $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
+            $propertyName = $property->getName();
+
+            if ($columnAttribute && ($propertyName !== static::getPrimaryIdentifierPropertyName())) {
+                $columnAttribute = $columnAttribute->newInstance();
+                $columnName = $columnAttribute->getName();
+
+                if (!$property->isInitialized($this)) {
+                    continue;
+                } else {
+                    $this->buildColumnInserts($columns, $values, $params, $property, $columnName);
+                }
+            }
+        }
+
+        $this->executeInsertQuery($columns, $values, $params);
+
+        foreach ($reflector->getProperties() as $property) {
+            $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
+
+            if ($auroraCollectionAttribute && $property->getType()->getName() === Collection::class) {
+                $auroraCollectionAttribute = $auroraCollectionAttribute->newInstance();
+                $associatedProperty = $auroraCollectionAttribute->getReferenceProperty();
+
+                if ($associatedProperty) {
+                    continue;
+                }
+
+                $pivotSchema = $auroraCollectionAttribute->getPivotSchema();
+                $pivotTable = $auroraCollectionAttribute->getPivotTable();
+                $pivotColumn = $auroraCollectionAttribute->getPivotColumn();
+
+                if (!$pivotTable || !$pivotColumn || !$pivotSchema) {
+                    continue;
+                }
+
+                $pivotInserts = [];
+
+                if ($this->saveAssociatedEntities($property, $pivotInserts) || !count($pivotInserts)) {
+                    continue;
+                }
+
+                $pivotInsertString = '';
+
+                foreach ($pivotInserts as $index => $insert) {
+                    $pivotInsertString .= sprintf(
+                        '(%d,%d)%s',
+                        self::getId(),
+                        $insert,
+                        $index === count($pivotInserts) - 1 ? ';' : ','
+                    );
+                }
+
+                $sql = sprintf(
+                    'INSERT INTO %s (%s) VALUES %s',
+                    $pivotSchema . '.' . $pivotTable,
+                    self::getPrimaryIdentifierColumnName() . ',' . $pivotColumn,
+                    $pivotInsertString
+                );
+
+                self::getDatabaseConnection()->getConnection()->prepare($sql)->execute();
+            }
+        }
 
         return $this;
     }
@@ -557,23 +645,79 @@ class Aurora
         $params = [];
 
         foreach ($reflector->getProperties() as $property) {
-            $column = $property->getAttributes(Column::class)[0] ?? null;
+            $columnAttribute = $property->getAttributes(Column::class)[0] ?? null;
+            $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
 
-            if ($column && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
-                $columnName = $column->newInstance()->getName();
+            if ($columnAttribute && ($property->getName() !== static::getPrimaryIdentifierPropertyName())) {
+                $columnName = $columnAttribute->newInstance()->getName();
                 $columns[] = $columnName . ' = :' . $columnName;
 
-                $value = $property->getValue($this);
+                $params[$columnName] = $this->getPropertyValueForDatabase($property);
+            }
 
-                if ($value instanceof Aurora) {
-                    $value = $value->getId();
+            if ($auroraCollectionAttribute) {
+                if (!$property->isInitialized($this)) continue;
+
+                $auroraCollectionAttribute = $auroraCollectionAttribute->newInstance();
+                $associatedProperty = $auroraCollectionAttribute->getReferenceProperty();
+
+                if ($associatedProperty) {
+                    continue;
                 }
 
-                if ($value instanceof \DateTimeInterface) {
-                    $value = $value->format(DATE_W3C);
+                $pivotTable = $auroraCollectionAttribute->getPivotTable();
+                $pivotColumn = $auroraCollectionAttribute->getPivotColumn();
+                $pivotSchema = $auroraCollectionAttribute->getPivotSchema();
+
+                if (!$pivotTable || !$pivotColumn || !$pivotSchema) {
+                    continue;
                 }
 
-                $params[$columnName] = $value;
+                $ids = [];
+
+                foreach ($property->getValue($this) as $associated) {
+                    $ids[] = $associated->save()->getId();
+                }
+
+                $associatedSearchQuery = sprintf(
+                    'SELECT %s FROM %s WHERE %s IN (%s) AND %s = %d',
+                    $pivotColumn,
+                    sprintf('%s.%s', $pivotSchema, $pivotTable),
+                    $pivotColumn,
+                    implode(',', $ids),
+                    self::getPrimaryIdentifierColumnName(),
+                    $this->getId()
+                );
+                $query = static::getDatabaseConnection()->getConnection()->prepare($associatedSearchQuery);
+                $query->setFetchMode(\PDO::FETCH_ASSOC);
+                $query->execute();
+
+                $existingAssociations = array_map(function ($result) use ($pivotColumn) {
+                    return $result[$pivotColumn];
+                }, $query->fetchAll());
+                $pivotInsertString = '';
+                $ids = array_values(array_diff($ids, $existingAssociations));
+
+                if (count($ids)) {
+                    foreach ($ids as $index => $id) {
+                        $pivotInsertString .= sprintf(
+                            '(%d,%d)%s',
+                            self::getId(),
+                            $id,
+                            $index === count($ids) - 1 ? ';' : ','
+                        );
+                    }
+
+                    $pivotInsertQuery = sprintf(
+                        'INSERT INTO %s (%s) VALUES %s',
+                        sprintf('%s.%s', $pivotSchema, $pivotTable),
+                        self::getPrimaryIdentifierColumnName() . ',' . $pivotColumn,
+                        $pivotInsertString
+                    );
+
+                    $associatedInsertQuery = self::getDatabaseConnection()->getConnection()->prepare($pivotInsertQuery);
+                    $associatedInsertQuery->execute();
+                }
             }
         }
 
@@ -597,6 +741,8 @@ class Aurora
      */
     public function delete(): bool
     {
+        $this->removeAssociations();
+
         $sql = sprintf(
             'DELETE FROM %s WHERE %s = :id',
             static::getSchemaAndTableCombined(),
@@ -609,6 +755,37 @@ class Aurora
     }
 
     /**
+     * @return void
+     */
+    private function removeAssociations(): void
+    {
+        $reflector = new \ReflectionClass($this);
+
+        foreach ($reflector->getProperties() as $property) {
+            $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
+
+            if (!$auroraCollectionAttribute) continue;
+
+            $auroraCollectionAttributeInstance = $auroraCollectionAttribute->newInstance();
+            $pivotSchema = $auroraCollectionAttributeInstance->getPivotSchema();
+            $pivotTable = $auroraCollectionAttributeInstance->getPivotTable();
+
+            if (!$pivotTable || !$pivotSchema) {
+                continue;
+            }
+
+            $sql = sprintf(
+                'DELETE FROM %s WHERE %s = %d',
+                $pivotSchema . '.' . $pivotTable,
+                static::getPrimaryIdentifierColumnName(),
+                $this->getId()
+            );
+
+            self::getDatabaseConnection()->getConnection()->prepare($sql)->execute();
+        }
+    }
+
+    /**
      * @param array $associations
      *
      * @return $this
@@ -616,7 +793,7 @@ class Aurora
     public function with(array $associations): static
     {
         foreach ($associations as $association) {
-            AuroraMapper::fetchAssociated($this);
+            AuroraMapper::fetchAssociated($this, $association);
         }
 
         return $this;
@@ -637,5 +814,44 @@ class Aurora
         } catch (\ReflectionException $exception) {
             return $propertyName;
         }
+    }
+
+    /**
+     * @param \ReflectionProperty $property
+     *
+     * @return mixed
+     */
+    private function getPropertyValueForDatabase(\ReflectionProperty $property): mixed
+    {
+        $value = $property->getValue($this);
+
+        if ($value instanceof Aurora) {
+            $value = $value->getId();
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            $value = $value->format(DATE_W3C);
+        }
+
+        return $value;
+    }
+
+    private function saveAssociatedEntities(\ReflectionProperty $property, array &$pivotInserts): bool
+    {
+        $incorrectTypeFound = false;
+
+        if ($property->isInitialized($this)) {
+            foreach ($property->getValue($this) as $collectionItem) {
+                if (!$collectionItem instanceof Aurora) {
+                    $incorrectTypeFound = true;
+                    continue;
+                }
+
+                $collectionItem = $collectionItem->save();
+                $pivotInserts[] = $collectionItem->getId();
+            }
+        }
+
+        return $incorrectTypeFound;
     }
 }
