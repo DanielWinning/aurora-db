@@ -40,6 +40,14 @@ class Collection implements \IteratorAggregate, \Countable
      */
     public function add(mixed $item): void
     {
+        if (is_array($item)) {
+            foreach ($item as $i) {
+                $this->items[] = $item;
+            }
+
+            return;
+        }
+
         $this->items[] = $item;
     }
 

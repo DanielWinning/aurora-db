@@ -6,12 +6,23 @@ namespace Luma\AuroraDatabase\Attributes;
 class AuroraCollection
 {
     private string $referenceClass;
-    private string $referenceProperty;
+    private ?string $referenceProperty;
+    private ?string $pivotSchema;
+    private ?string $pivotTable;
+    private ?string $pivotColumn;
 
-    public function __construct(string $class, string $property)
-    {
+    public function __construct(
+        string $class,
+        ?string $property = null,
+        ?string $pivotSchema = null,
+        ?string $pivotTable = null,
+        ?string $pivotColumn = null
+    ) {
         $this->referenceClass = $class;
         $this->referenceProperty = $property;
+        $this->pivotSchema = $pivotSchema;
+        $this->pivotTable = $pivotTable;
+        $this->pivotColumn = $pivotColumn;
     }
 
     /**
@@ -23,10 +34,34 @@ class AuroraCollection
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getReferenceProperty(): string
+    public function getReferenceProperty(): ?string
     {
         return $this->referenceProperty;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPivotTable(): ?string
+    {
+        return $this->pivotTable;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPivotColumn(): ?string
+    {
+        return $this->pivotColumn;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPivotSchema(): ?string
+    {
+        return $this->pivotSchema;
     }
 }
