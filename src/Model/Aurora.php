@@ -584,8 +584,6 @@ class Aurora
 
         $this->executeInsertQuery($columns, $values, $params);
 
-        $pivotInserts = [];
-
         foreach ($reflector->getProperties() as $property) {
             $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
 
@@ -605,21 +603,11 @@ class Aurora
                     continue;
                 }
 
-                $incorrectTypeFound = false;
+                $pivotInserts = [];
 
-                if ($property->isInitialized($this)) {
-                    foreach ($property->getValue($this) as $collectionItem) {
-                        if (!$collectionItem instanceof Aurora) {
-                            $incorrectTypeFound = true;
-                            continue;
-                        }
-
-                        $collectionItem = $collectionItem->save();
-                        $pivotInserts[] = $collectionItem->getId();
-                    }
+                if ($this->saveAssociatedEntities($property, $pivotInserts) || !count($pivotInserts)) {
+                    continue;
                 }
-
-                if ($incorrectTypeFound || !count($pivotInserts)) continue;
 
                 $pivotInsertString = '';
 
@@ -664,17 +652,7 @@ class Aurora
                 $columnName = $columnAttribute->newInstance()->getName();
                 $columns[] = $columnName . ' = :' . $columnName;
 
-                $value = $property->getValue($this);
-
-                if ($value instanceof Aurora) {
-                    $value = $value->getId();
-                }
-
-                if ($value instanceof \DateTimeInterface) {
-                    $value = $value->format(DATE_W3C);
-                }
-
-                $params[$columnName] = $value;
+                $params[$columnName] = $this->getPropertyValueForDatabase($property);
             }
 
             if ($auroraCollectionAttribute) {
@@ -836,5 +814,44 @@ class Aurora
         } catch (\ReflectionException $exception) {
             return $propertyName;
         }
+    }
+
+    /**
+     * @param \ReflectionProperty $property
+     *
+     * @return mixed
+     */
+    private function getPropertyValueForDatabase(\ReflectionProperty $property): mixed
+    {
+        $value = $property->getValue($this);
+
+        if ($value instanceof Aurora) {
+            $value = $value->getId();
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            $value = $value->format(DATE_W3C);
+        }
+
+        return $value;
+    }
+
+    private function saveAssociatedEntities(\ReflectionProperty $property, array &$pivotInserts): bool
+    {
+        $incorrectTypeFound = false;
+
+        if ($property->isInitialized($this)) {
+            foreach ($property->getValue($this) as $collectionItem) {
+                if (!$collectionItem instanceof Aurora) {
+                    $incorrectTypeFound = true;
+                    continue;
+                }
+
+                $collectionItem = $collectionItem->save();
+                $pivotInserts[] = $collectionItem->getId();
+            }
+        }
+
+        return $incorrectTypeFound;
     }
 }
