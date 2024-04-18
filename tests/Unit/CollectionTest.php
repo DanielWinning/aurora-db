@@ -22,9 +22,9 @@ class CollectionTest extends TestCase
         $dotenv->load();
 
         $connection = new DatabaseConnection(
-            sprintf('mysql:host=%s;port=%d;', $_ENV['DB_HOST'], $_ENV['DB_PORT']),
-            $_ENV['DB_USER'],
-            $_ENV['DB_PASSWORD']
+            sprintf('mysql:host=%s;port=%d;', $_ENV['DATABASE_HOST'], $_ENV['DATABASE_PORT']),
+            $_ENV['DATABASE_USER'],
+            $_ENV['DATABASE_PASSWORD']
         );
         Aurora::setDatabaseConnection($connection);
     }
