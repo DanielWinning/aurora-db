@@ -25,7 +25,9 @@ class QueryPanel implements IBarPanel
      */
     public function getTab(): string
     {
-        return '<span title="Database Queries">DB</span>';
+        $svg = file_get_contents(dirname(__DIR__, 2) . '/assets/db.svg');
+
+        return sprintf('<span title="Database Queries">%s<span class="tracy-label">DB</span></span>', $svg);
     }
 
     /**
@@ -33,14 +35,17 @@ class QueryPanel implements IBarPanel
      */
     public function getPanel(): false|string
     {
-        ob_start();
+        $html = '<div style="padding: .5rem">';
 
         foreach ($this->queries as [$query, $params, $time]) {
-            echo htmlspecialchars($query), '<br>';
-            echo 'Parameters: ', htmlspecialchars(print_r($params, true)), '<br>';
-            echo 'Time: ', htmlspecialchars($time);
+            $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
+            $queryHtml = str_replace('%query%', $query, $queryHtml);
+            $queryHtml = str_replace('%params%', htmlspecialchars(print_r($params, true)), $queryHtml);
+            $queryHtml = str_replace('%time%', htmlspecialchars($time), $queryHtml);
+
+            $html .= $queryHtml;
         }
 
-        return ob_get_clean();
+        return $html . '</div>';
     }
 }
