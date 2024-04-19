@@ -9,6 +9,7 @@ use Luma\AuroraDatabase\Attributes\Schema;
 use Luma\AuroraDatabase\Attributes\Table;
 use Luma\AuroraDatabase\DatabaseConnection;
 use Luma\AuroraDatabase\Utils\Collection;
+use Tracy\Debugger;
 
 class Aurora
 {
@@ -101,7 +102,9 @@ class Aurora
             self::getSchemaAndTableCombined()
         );
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $startTime = self::getQueryStartTime();
         $query->execute();
+        self::debugQueryExecutionTime($startTime, $sql);
         $query->setFetchMode(\PDO::FETCH_NUM);
 
         $result = $query->fetch();
@@ -334,7 +337,9 @@ class Aurora
             }
         }
 
+        $startTime = self::getQueryStartTime();
         $query->execute();
+        self::debugQueryExecutionTime($startTime, $sql, $params ?? []);
         $query->setFetchMode(\PDO::FETCH_ASSOC);
 
         $result = $query->fetchAll();
@@ -547,7 +552,12 @@ class Aurora
         );
 
         $query = static::$connection->getConnection()->prepare($sql);
+
+        $startTime = self::getQueryStartTime();
+
         $query->execute($params);
+
+        self::debugQueryExecutionTime($startTime, $sql, $params);
 
         $this->{static::getPrimaryIdentifierPropertyName()}
             = static::getDatabaseConnection()->getConnection()->lastInsertId();
@@ -627,7 +637,11 @@ class Aurora
                     $pivotInsertString
                 );
 
+                $startTime = self::getQueryStartTime();
+
                 self::getDatabaseConnection()->getConnection()->prepare($sql)->execute();
+
+                self::debugQueryExecutionTime($startTime, $sql);
             }
         }
 
@@ -690,7 +704,9 @@ class Aurora
                 );
                 $query = static::getDatabaseConnection()->getConnection()->prepare($associatedSearchQuery);
                 $query->setFetchMode(\PDO::FETCH_ASSOC);
+                $startTime = self::getQueryStartTime();
                 $query->execute();
+                self::debugQueryExecutionTime($startTime, $associatedSearchQuery);
 
                 $existingAssociations = array_map(function ($result) use ($pivotColumn) {
                     return $result[$pivotColumn];
@@ -716,7 +732,9 @@ class Aurora
                     );
 
                     $associatedInsertQuery = self::getDatabaseConnection()->getConnection()->prepare($pivotInsertQuery);
+                    $startTime = self::getQueryStartTime();
                     $associatedInsertQuery->execute();
+                    self::debugQueryExecutionTime($startTime, $pivotInsertQuery);
                 }
             }
         }
@@ -731,7 +749,9 @@ class Aurora
         );
 
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $startTime = self::getQueryStartTime();
         $query->execute($params);
+        self::debugQueryExecutionTime($startTime, $sql, $params);
 
         return $this;
     }
@@ -750,8 +770,13 @@ class Aurora
         );
 
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
+        $params = ['id' => $this->getId()];
 
-        return $query->execute(['id' => $this->getId()]);
+        $startTime = self::getQueryStartTime();
+        $queryResult = $query->execute($params);
+        self::debugQueryExecutionTime($startTime, $sql, $params);
+
+        return $queryResult;
     }
 
     /**
@@ -781,7 +806,9 @@ class Aurora
                 $this->getId()
             );
 
+            $startTime = self::getQueryStartTime();
             self::getDatabaseConnection()->getConnection()->prepare($sql)->execute();
+            self::debugQueryExecutionTime($startTime, $sql);
         }
     }
 
@@ -853,5 +880,37 @@ class Aurora
         }
 
         return $incorrectTypeFound;
+    }
+
+    /**
+     * @return float|string|null
+     */
+    private static function getQueryStartTime(): float|string|null
+    {
+        if (!Debugger::isEnabled()) {
+            return null;
+        }
+
+        return microtime(true);
+    }
+
+    /**
+     * @param float|string|null $startTime
+     * @param string $query
+     * @param array $params
+     *
+     * @return void
+     */
+    private static function debugQueryExecutionTime(float|string|null $startTime, string $query, array $params = []): void
+    {
+        if (!$startTime) {
+            return;
+        }
+
+        $elapsedTime = microtime(true) - $startTime;
+
+        Debugger::barDump($query, 'SQL Query');
+        Debugger::barDump($params, 'Query Parameters');
+        Debugger::barDump($elapsedTime, 'Query Time');
     }
 }
