@@ -8,12 +8,14 @@ use Luma\AuroraDatabase\Attributes\Identifier;
 use Luma\AuroraDatabase\Attributes\Schema;
 use Luma\AuroraDatabase\Attributes\Table;
 use Luma\AuroraDatabase\DatabaseConnection;
+use Luma\AuroraDatabase\Debug\QueryPanel;
 use Luma\AuroraDatabase\Utils\Collection;
 use Tracy\Debugger;
 
 class Aurora
 {
     protected static ?DatabaseConnection $connection = null;
+    protected static ?QueryPanel $queryPanel = null;
     protected static string $queryString = '';
     protected static array $queryBindings = [];
 
@@ -33,6 +35,7 @@ class Aurora
     public static function setDatabaseConnection(DatabaseConnection $connection): void
     {
         static::$connection = $connection;
+        static::$queryPanel = new QueryPanel();
     }
 
     /**
@@ -498,6 +501,8 @@ class Aurora
 
     /**
      * @return static
+     *
+     * @throws \ReflectionException
      */
     public function save(): static
     {
@@ -909,8 +914,6 @@ class Aurora
 
         $elapsedTime = microtime(true) - $startTime;
 
-        Debugger::barDump($query, 'SQL Query');
-        Debugger::barDump($params, 'Query Parameters');
-        Debugger::barDump($elapsedTime, 'Query Time');
+        static::$queryPanel->addQuery($query, $params, $elapsedTime);
     }
 }
