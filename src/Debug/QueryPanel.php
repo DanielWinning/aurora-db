@@ -27,7 +27,7 @@ class QueryPanel implements IBarPanel
     {
         $svg = file_get_contents(dirname(__DIR__, 2) . '/assets/db.svg');
 
-        return sprintf('<span title="Database Queries">%s<span class="tracy-label">DB</span></span>', $svg);
+        return sprintf('<span title="Database Queries">%s</span>', $svg);
     }
 
     /**
@@ -35,7 +35,7 @@ class QueryPanel implements IBarPanel
      */
     public function getPanel(): false|string
     {
-        $html = '<div style="padding: .5rem">';
+        $html = '<div style="padding: .125rem">';
 
         foreach ($this->queries as [$query, $params, $time]) {
             $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
