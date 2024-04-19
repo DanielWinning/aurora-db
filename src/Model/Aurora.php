@@ -35,7 +35,21 @@ class Aurora
     public static function setDatabaseConnection(DatabaseConnection $connection): void
     {
         static::$connection = $connection;
-        static::$queryPanel = new QueryPanel();
+    }
+
+    /**
+     * @return void
+     */
+    public static function createQueryPanel(): void
+    {
+        if (Debugger::isEnabled()) {
+            if (static::$queryPanel) {
+                return;
+            }
+
+            static::$queryPanel = new QueryPanel();
+            Debugger::getBar()->addPanel(static::$queryPanel, 'database-queries');
+        }
     }
 
     /**
@@ -908,7 +922,7 @@ class Aurora
      */
     private static function debugQueryExecutionTime(float|string|null $startTime, string $query, array $params = []): void
     {
-        if (!$startTime) {
+        if (!$startTime || !static::$queryPanel) {
             return;
         }
 
