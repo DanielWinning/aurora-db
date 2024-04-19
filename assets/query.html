@@ -1,18 +1,32 @@
-<div style="background-color: azure; border: 1px solid #ebebeb">
+<style>
+    div.aurora-db-panel-query {
+      background-color: azure;
+      border: 1px solid #ebebeb;
+    }
+    div.aurora-db-panel-query > div {
+      margin: .25rem 0;
+    }
+    div.aurora-db-panel-query > div > span {
+      display: block;
+      font-weight: bold;
+      margin-top: .15rem;
+    }
+</style>
+<div class="aurora-db-panel-query">
     <div>
-        <span style="display: block; font-weight: bold;">
+        <span>
             Query
         </span>
         %query%
     </div>
     <div>
-        <span style="display: block; font-weight: bold;">
+        <span>
             Parameters
         </span>
         %params%
     </div>
     <div>
-        <span style="display: block; font-weight: bold;">
+        <span>
             Execution Time
         </span>
         %time%
