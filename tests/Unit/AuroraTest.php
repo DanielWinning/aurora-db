@@ -495,6 +495,7 @@ class AuroraTest extends TestCase
     public function testDebuggerEnabled(): void
     {
         Debugger::enable();
+        Aurora::createQueryPanel();
 
         User::find(1);
 
