@@ -14,6 +14,7 @@ use Luma\Tests\Classes\Permission;
 use Luma\Tests\Classes\Role;
 use Luma\Tests\Classes\User;
 use PHPUnit\Framework\TestCase;
+use Tracy\Debugger;
 
 class AuroraTest extends TestCase
 {
@@ -486,5 +487,17 @@ class AuroraTest extends TestCase
         $newRole->delete();
         $role->delete();
         $permission->delete();
+    }
+
+    /**
+     * @return void
+     */
+    public function testDebuggerEnabled(): void
+    {
+        Debugger::enable();
+
+        User::find(1);
+
+        $this->expectNotToPerformAssertions();
     }
 }
