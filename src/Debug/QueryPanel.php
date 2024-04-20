@@ -35,7 +35,7 @@ class QueryPanel implements IBarPanel
      */
     public function getPanel(): false|string
     {
-        $html = '<div><h1 style="margin-bottom: .25rem">Database Queries</h1>';
+        $html = '<div><h1 style="margin-bottom: .5rem">Database Queries</h1>';
 
         if (!count($this->queries)) {
             $html .= '<div style="border: none; background-color: #fff; color: #a4a1a1; font-size: 1.25rem; text-align: center; font-style: italic">No queries were ran during this request</div>';
