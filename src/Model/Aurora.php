@@ -53,6 +53,14 @@ class Aurora
     }
 
     /**
+     * @return QueryPanel|null
+     */
+    public static function getQueryPanel(): ?QueryPanel
+    {
+        return static::$queryPanel;
+    }
+
+    /**
      * @return DatabaseConnection
      */
     public static function getDatabaseConnection(): DatabaseConnection

@@ -497,8 +497,12 @@ class AuroraTest extends TestCase
         Debugger::enable();
         Aurora::createQueryPanel();
 
+        $this->assertTrue(str_contains(Aurora::getQueryPanel()->getPanel(), 'No queries'));
+        $this->assertTrue(str_contains(Aurora::getQueryPanel()->getTab(), '(0)'));
+
         User::find(1);
 
-        $this->expectNotToPerformAssertions();
+        $this->assertTrue(str_contains(Aurora::getQueryPanel()->getTab(), '(1)'));
+        $this->assertTrue(str_contains(Aurora::getQueryPanel()->getPanel(), 'SELECT * FROM DatabaseComponentTest.User'));
     }
 }
