@@ -42,7 +42,7 @@ class QueryPanel implements IBarPanel
             $queryHtml = str_replace('%query%', $query, $queryHtml);
             $queryHtml = str_replace('%params%', $this->getParametersHtml($params), $queryHtml);
 
-            $timeInMilliseconds = $time * 1000;
+            $timeInMilliseconds = number_format($time * 1000, 2);
             $queryHtml = str_replace('%time%', htmlspecialchars($timeInMilliseconds) . 'ms', $queryHtml);
 
             $html .= $queryHtml;
