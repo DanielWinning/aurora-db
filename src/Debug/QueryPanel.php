@@ -35,10 +35,10 @@ class QueryPanel implements IBarPanel
      */
     public function getPanel(): false|string
     {
-        $html = '<div><h1>Database Queries</h1>';
+        $html = '<div><h1 style="margin-bottom: .25rem">Database Queries</h1>';
 
         if (!count($this->queries)) {
-            $html .= '<div style="border: none; background-color: #fff; color: #ebebeb; font-size: 1.25rem; text-align: center; font-style: italic">No queries were ran during this request</div>';
+            $html .= '<div style="border: none; background-color: #fff; color: #a4a1a1; font-size: 1.25rem; text-align: center; font-style: italic">No queries were ran during this request</div>';
         } else {
             foreach ($this->queries as [$query, $params, $time]) {
                 $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
@@ -83,7 +83,7 @@ class QueryPanel implements IBarPanel
         $totalTimeTaken = 0;
 
         foreach ($this->queries as $query) {
-            $totalTimeTaken += ($query * 1000);
+            $totalTimeTaken += ($query[2] * 1000);
         }
 
         return number_format($totalTimeTaken, 2);
