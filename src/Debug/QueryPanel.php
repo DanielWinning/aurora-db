@@ -35,14 +35,12 @@ class QueryPanel implements IBarPanel
      */
     public function getPanel(): false|string
     {
-        $html = '<div style="padding: .125rem">';
+        $html = '<div><h1>Database Queries</h1>';
 
         foreach ($this->queries as [$query, $params, $time]) {
             $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
             $queryHtml = str_replace('%query%', $query, $queryHtml);
-
-            $paramsAsJson = json_encode($params, JSON_PRETTY_PRINT);
-            $queryHtml = str_replace('%params%', htmlspecialchars($paramsAsJson), $queryHtml);
+            $queryHtml = str_replace('%params%', $this->getParametersHtml($params), $queryHtml);
 
             $timeInMilliseconds = $time * 1000;
             $queryHtml = str_replace('%time%', htmlspecialchars($timeInMilliseconds) . 'ms', $queryHtml);
@@ -51,5 +49,21 @@ class QueryPanel implements IBarPanel
         }
 
         return $html . '</div>';
+    }
+
+    /**
+     * @param array $params
+     *
+     * @return string
+     */
+    private function getParametersHtml(array $params): string
+    {
+        $html = '';
+
+        foreach ($params as $param => $value) {
+            $html .= sprintf('<span style="display: block; color: cornflowerblue"><strong style="color: darkorange">%s</strong>: %s</span>', $param, $value);
+        }
+
+        return $html;
     }
 }
