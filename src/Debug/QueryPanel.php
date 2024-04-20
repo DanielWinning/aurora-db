@@ -27,7 +27,7 @@ class QueryPanel implements IBarPanel
     {
         $svg = file_get_contents(dirname(__DIR__, 2) . '/assets/db.svg');
 
-        return sprintf('<span title="Database Queries">%s</span>', $svg);
+        return sprintf('<span title="Database Queries">%s (%d) %sms</span>', $svg, count($this->queries), $this->getTotalExecutionTime());
     }
 
     /**
@@ -37,15 +37,19 @@ class QueryPanel implements IBarPanel
     {
         $html = '<div><h1>Database Queries</h1>';
 
-        foreach ($this->queries as [$query, $params, $time]) {
-            $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
-            $queryHtml = str_replace('%query%', $query, $queryHtml);
-            $queryHtml = str_replace('%params%', $this->getParametersHtml($params), $queryHtml);
+        if (!count($this->queries)) {
+            $html .= '<div style="border: none; background-color: #fff; color: #ebebeb; font-size: 1.25rem; text-align: center; font-style: italic">No queries were ran during this request</div>';
+        } else {
+            foreach ($this->queries as [$query, $params, $time]) {
+                $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
+                $queryHtml = str_replace('%query%', $query, $queryHtml);
+                $queryHtml = str_replace('%params%', $this->getParametersHtml($params), $queryHtml);
 
-            $timeInMilliseconds = number_format($time * 1000, 2);
-            $queryHtml = str_replace('%time%', htmlspecialchars($timeInMilliseconds) . 'ms', $queryHtml);
+                $timeInMilliseconds = number_format($time * 1000, 2);
+                $queryHtml = str_replace('%time%', htmlspecialchars($timeInMilliseconds) . 'ms', $queryHtml);
 
-            $html .= $queryHtml;
+                $html .= $queryHtml;
+            }
         }
 
         return $html . '</div>';
@@ -65,5 +69,23 @@ class QueryPanel implements IBarPanel
         }
 
         return $html;
+    }
+
+    /**
+     * @return string
+     */
+    private function getTotalExecutionTime(): string
+    {
+        if (!count($this->queries)) {
+            return number_format(0, 2);
+        }
+
+        $totalTimeTaken = 0;
+
+        foreach ($this->queries as $query) {
+            $totalTimeTaken += ($query * 1000);
+        }
+
+        return number_format($totalTimeTaken, 2);
     }
 }
