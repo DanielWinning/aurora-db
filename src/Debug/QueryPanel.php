@@ -40,8 +40,12 @@ class QueryPanel implements IBarPanel
         foreach ($this->queries as [$query, $params, $time]) {
             $queryHtml = file_get_contents(dirname(__DIR__, 2) . '/assets/query.html');
             $queryHtml = str_replace('%query%', $query, $queryHtml);
-            $queryHtml = str_replace('%params%', htmlspecialchars(print_r($params, true)), $queryHtml);
-            $queryHtml = str_replace('%time%', htmlspecialchars($time), $queryHtml);
+
+            $paramsAsJson = json_encode($params, JSON_PRETTY_PRINT);
+            $queryHtml = str_replace('%params%', htmlspecialchars($paramsAsJson), $queryHtml);
+
+            $timeInMilliseconds = $time * 1000;
+            $queryHtml = str_replace('%time%', htmlspecialchars($timeInMilliseconds) . 'ms', $queryHtml);
 
             $html .= $queryHtml;
         }
