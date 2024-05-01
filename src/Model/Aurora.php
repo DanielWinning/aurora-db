@@ -153,7 +153,7 @@ class Aurora
      *
      * @return static|null
      *
-     * @throws \ReflectionException
+     * @throws \ReflectionException|\Exception
      */
     public static function findBy(string $property, string|int $value): static|null
     {

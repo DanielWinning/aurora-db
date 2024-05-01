@@ -86,8 +86,10 @@ class AuroraMapper
                     if (self::$parent) {
                         $property->setValue($aurora, self::$parent);
                     } else {
-                        $associatedObject = $propertyClass::find($fetchData[$columnName]);
-                        $property->setValue($aurora, $associatedObject);
+                        if (isset($fetchData[$columnName]) && $fetchData[$columnName]) {
+                            $associatedObject = $propertyClass::find($fetchData[$columnName]);
+                            $property->setValue($aurora, $associatedObject);
+                        }
                     }
                 } elseif ($implementsDateTimeInterface || $propertyClass === \DateTimeInterface::class) {
                     $property->setValue($aurora, new \DateTime($fetchData[$columnName]));
