@@ -13,7 +13,7 @@ class Populator
      */
     public function __construct()
     {
-        $lumaConfigPath = sprintf('%s', dirname(__DIR__, 5));
+        $lumaConfigPath = sprintf('%s/config', dirname(__DIR__, 5));
 
         if (file_exists($lumaConfigPath) && is_dir($lumaConfigPath)) {
             $dotenv = Dotenv::createImmutable($lumaConfigPath);

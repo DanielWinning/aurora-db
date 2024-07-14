@@ -1,0 +1,6 @@
+{
+  "name": "@lumax/aurora-db",
+  "devDependencies": {
+    "@dannyxcii/badger": "^0.4.2"
+  }
+}
