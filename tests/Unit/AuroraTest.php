@@ -220,8 +220,6 @@ class AuroraTest extends TestCase
     {
         $article = Article::getLatest();
 
-        //$this->assertEquals(self::INSERT_MESSAGE, $article->getTitle());
-
         $article->setTitle(self::UPDATE_MESSAGE);
         $article->save();
 
@@ -445,6 +443,8 @@ class AuroraTest extends TestCase
 
     /**
      * @return void
+     *
+     * @throws \ReflectionException
      */
     public function testWith()
     {
