@@ -109,6 +109,14 @@ class Collection implements \IteratorAggregate, \Countable
     }
 
     /**
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return !$this->count();
+    }
+
+    /**
      * @return array
      */
     public function toArray(): array

@@ -105,6 +105,21 @@ class CollectionTest extends TestCase
     }
 
     /**
+     * @return void
+     */
+    public function testIsEmpty(): void
+    {
+        $collection = new Collection([]);
+
+        var_dump($collection->count(), $collection->isEmpty());
+        $this->assertTrue($collection->isEmpty());
+
+        $collection2 = new Collection(['a', 'b', 'c']);
+
+        $this->assertFalse($collection2->isEmpty());
+    }
+
+    /**
      * @return array[]
      */
     public static function collectionSearchDataProvider(): array
