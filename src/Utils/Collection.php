@@ -2,6 +2,8 @@
 
 namespace Luma\AuroraDatabase\Utils;
 
+use Luma\AuroraDatabase\Model\Aurora;
+
 class Collection implements \IteratorAggregate, \Countable
 {
     protected array $items;
@@ -42,7 +44,7 @@ class Collection implements \IteratorAggregate, \Countable
     {
         if (is_array($item)) {
             foreach ($item as $i) {
-                $this->items[] = $item;
+                $this->items[] = $i;
             }
 
             return;
@@ -58,7 +60,13 @@ class Collection implements \IteratorAggregate, \Countable
      */
     public function remove(mixed $item): void
     {
-        $key = array_search($item, $this->items, true);
+        if ($item instanceof Aurora) {
+            $key = array_search($this->find(function (Aurora $ownItem) use ($item) {
+                return (get_class($ownItem) === get_class($item)) && ($ownItem->getId() === $item->getId());
+            }), $this->items, true);
+        } else {
+            $key = array_search($item, $this->items, true);
+        }
 
         if ($key !== false) {
             unset($this->items[$key]);

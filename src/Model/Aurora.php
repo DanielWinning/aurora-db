@@ -721,14 +721,13 @@ class Aurora
                 }
 
                 $associatedSearchQuery = sprintf(
-                    'SELECT %s FROM %s WHERE %s IN (%s) AND %s = %d',
+                    'SELECT %s FROM %s WHERE %s = %d',
                     $pivotColumn,
                     sprintf('%s.%s', $pivotSchema, $pivotTable),
-                    $pivotColumn,
-                    implode(',', $ids),
                     self::getPrimaryIdentifierColumnName(),
                     $this->getId()
                 );
+
                 $query = static::getDatabaseConnection()->getConnection()->prepare($associatedSearchQuery);
                 $query->setFetchMode(\PDO::FETCH_ASSOC);
                 $startTime = self::getQueryStartTime();
@@ -738,30 +737,50 @@ class Aurora
                 $existingAssociations = array_map(function ($result) use ($pivotColumn) {
                     return $result[$pivotColumn];
                 }, $query->fetchAll());
-                $pivotInsertString = '';
-                $ids = array_values(array_diff($ids, $existingAssociations));
 
-                if (count($ids)) {
-                    foreach ($ids as $index => $id) {
+                $newAssociations = array_diff($ids, $existingAssociations);
+                $associationsToRemove = array_diff($existingAssociations, $ids);
+
+                $pivotInsertString = '';
+
+                if (count($newAssociations)) {
+                    foreach ($newAssociations as $index => $id) {
                         $pivotInsertString .= sprintf(
-                            '(%d,%d)%s',
-                            self::getId(),
-                            $id,
-                            $index === count($ids) - 1 ? ';' : ','
+                            '(%d,%d)',
+                            $this->getId(),
+                            $id
                         );
                     }
 
                     $pivotInsertQuery = sprintf(
-                        'INSERT INTO %s (%s) VALUES %s',
+                        'INSERT INTO %s (%s, %s) VALUES %s',
                         sprintf('%s.%s', $pivotSchema, $pivotTable),
-                        self::getPrimaryIdentifierColumnName() . ',' . $pivotColumn,
+                        self::getPrimaryIdentifierColumnName(),
+                        $pivotColumn,
                         $pivotInsertString
                     );
 
-                    $associatedInsertQuery = self::getDatabaseConnection()->getConnection()->prepare($pivotInsertQuery);
+                    $insertQuery = self::getDatabaseConnection()->getConnection()->prepare($pivotInsertQuery);
                     $startTime = self::getQueryStartTime();
-                    $associatedInsertQuery->execute();
+                    $insertQuery->execute();
                     self::debugQueryExecutionTime($startTime, $pivotInsertQuery);
+                }
+
+                if (count($associationsToRemove)) {
+                    $removeIds = implode(',', $associationsToRemove);
+                    $deleteQuery = sprintf(
+                        'DELETE FROM %s WHERE %s = %d AND %s IN (%s)',
+                        sprintf('%s.%s', $pivotSchema, $pivotTable),
+                        self::getPrimaryIdentifierColumnName(),
+                        $this->getId(),
+                        $pivotColumn,
+                        $removeIds
+                    );
+
+                    $deleteStatement = static::getDatabaseConnection()->getConnection()->prepare($deleteQuery);
+                    $startTime = self::getQueryStartTime();
+                    $deleteStatement->execute();
+                    self::debugQueryExecutionTime($startTime, $deleteQuery);
                 }
             }
         }
