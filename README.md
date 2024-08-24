@@ -2,9 +2,9 @@
 
 <div>
 <!-- Version Badge -->
-<img src="https://img.shields.io/badge/Version-2.7.0-blue" alt="Version 2.7.0">
+<img src="https://img.shields.io/badge/Version-2.7.1-blue" alt="Version 2.7.1">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-92.46%25-green" alt="PHP Coverage 92.46%">
+<img src="https://img.shields.io/badge/PHP Coverage-90.00%25-green" alt="PHP Coverage 90.00%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>
