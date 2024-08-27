@@ -554,7 +554,6 @@ class Aurora
         $columns[] = $columnName;
         $values[] = ':' . $columnName;
         $params[$columnName] = $this->getPropertyValueForDatabase($property);
-        ;
     }
 
     /**
