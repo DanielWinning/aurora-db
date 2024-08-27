@@ -553,13 +553,8 @@ class Aurora
     ): void{
         $columns[] = $columnName;
         $values[] = ':' . $columnName;
-        $value = $property->getValue($this);
-
-        if ($value instanceof Aurora) {
-            $value = $value->getId();
-        }
-
-        $params[$columnName] = $value;
+        $params[$columnName] = $this->getPropertyValueForDatabase($property);
+        ;
     }
 
     /**
@@ -904,6 +899,10 @@ class Aurora
 
         if ($value instanceof \DateTimeInterface) {
             $value = $value->format(DATE_W3C);
+        }
+
+        if (is_bool($value)) {
+            $value = (int) $value;
         }
 
         return $value;
