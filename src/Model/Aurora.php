@@ -553,13 +553,8 @@ class Aurora
     ): void{
         $columns[] = $columnName;
         $values[] = ':' . $columnName;
-        $value = $property->getValue($this);
-
-        if ($value instanceof Aurora) {
-            $value = $value->getId();
-        }
-
-        $params[$columnName] = $value;
+        $params[$columnName] = $this->getPropertyValueForDatabase($property);
+        ;
     }
 
     /**
@@ -906,9 +901,21 @@ class Aurora
             $value = $value->format(DATE_W3C);
         }
 
+        if (is_bool($value)) {
+            $value = (int) $value;
+        }
+
         return $value;
     }
 
+    /**
+     * @param \ReflectionProperty $property
+     * @param array $pivotInserts
+     *
+     * @return bool
+     *
+     * @throws \ReflectionException
+     */
     private function saveAssociatedEntities(\ReflectionProperty $property, array &$pivotInserts): bool
     {
         $incorrectTypeFound = false;
