@@ -908,6 +908,14 @@ class Aurora
         return $value;
     }
 
+    /**
+     * @param \ReflectionProperty $property
+     * @param array $pivotInserts
+     *
+     * @return bool
+     *
+     * @throws \ReflectionException
+     */
     private function saveAssociatedEntities(\ReflectionProperty $property, array &$pivotInserts): bool
     {
         $incorrectTypeFound = false;
