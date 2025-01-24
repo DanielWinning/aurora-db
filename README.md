@@ -4,7 +4,7 @@
 <!-- Version Badge -->
 <img src="https://img.shields.io/badge/Version-2.7.3-blue" alt="Version 2.7.3">
 <!-- PHP Coverage Badge -->
-<img src="https://img.shields.io/badge/PHP Coverage-89.67%25-yellow" alt="PHP Coverage 89.67%">
+<img src="https://img.shields.io/badge/PHP Coverage-89.25%25-yellow" alt="PHP Coverage 89.25%">
 <!-- License Badge -->
 <img src="https://img.shields.io/badge/License-GPL--3.0--or--later-34ad9b" alt="License GPL--3.0--or--later">
 </div>

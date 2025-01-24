@@ -249,7 +249,7 @@ class AuroraTest extends TestCase
 
         $this->assertInstanceOf(User::class, $user);
 
-        $user->with([Role::class]);
+        $user->with([Role::class => []]);
 
         $this->assertEquals('Guest', $user->getRoles()->get(0)->getName());
 
@@ -323,6 +323,9 @@ class AuroraTest extends TestCase
         $this->assertEquals(3, AuroraExtension::count());
     }
 
+    /**
+     * @return void
+     */
     public function testPaginate(): void
     {
         $articles = Article::paginate();
@@ -452,12 +455,12 @@ class AuroraTest extends TestCase
 
         $this->assertInstanceOf(Aurora::class, $user);
 
-        $articlesOne = $user->with([Article::class])->getArticles();
+        $articlesOne = $user->with([Article::class => []])->getArticles();
 
         $this->assertInstanceOf(Collection::class, $articlesOne);
         $this->assertInstanceOf(Article::class, $articlesOne->first());
 
-        $articlesTwo = $user->with([Article::class])->getArticles();
+        $articlesTwo = $user->with([Article::class => []])->getArticles();
 
         $this->assertEquals($articlesOne->count(), $articlesTwo->count());
 
@@ -475,7 +478,7 @@ class AuroraTest extends TestCase
 
         $roleFromDatabase = Role::select()->whereIs('handle', 'admin')
             ->get()
-            ->with([Permission::class]);
+            ->with([Permission::class => []]);
         $this->assertInstanceOf(Collection::class, $roleFromDatabase->getPermissions());
 
         $newRole = Role::create([
