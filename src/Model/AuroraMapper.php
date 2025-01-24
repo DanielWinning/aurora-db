@@ -17,7 +17,7 @@ class AuroraMapper
      * @param array $fetchData
      * @param string $mapToClass
      *
-     * @return ?array
+     * @return Aurora|null
      */
     public static function map(array $fetchData, string $mapToClass): ?Aurora
     {
@@ -78,7 +78,7 @@ class AuroraMapper
         $propertyType = $property->getType();
 
         if ($propertyType) {
-            if (!$propertyType->isBuiltin()) {
+            if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
                 $propertyClass = $propertyType->getName();
                 $implementsDateTimeInterface = in_array(\DateTimeInterface::class, class_implements($propertyClass));
 
@@ -122,7 +122,9 @@ class AuroraMapper
             if (!$attribute) continue;
 
             $propertyType = $property->getType();
-            $propertyClass = $propertyType->getName();
+            $propertyClass = $propertyType instanceof \ReflectionNamedType
+                ? $propertyType->getName()
+                : null;
             $attributeInstance = $attribute->newInstance();
 
             if ($propertyClass !== Collection::class || $attributeInstance->getReferenceClass() !== $associatedClassName) {
@@ -172,6 +174,7 @@ class AuroraMapper
                     $associatedIdsQuery->setFetchMode(\PDO::FETCH_NUM);
 
                     $associatedIds = $associatedIdsQuery->fetchAll();
+
                     if (count($associatedIds)) {
                         $associatedIds = array_map(function (array $id) {
                             return $id[0];
