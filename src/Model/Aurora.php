@@ -19,6 +19,10 @@ class Aurora
     protected static string $queryString = '';
     protected static array $queryBindings = [];
 
+    final public function __construct()
+    {
+    }
+
     /**
      * @return int
      */
