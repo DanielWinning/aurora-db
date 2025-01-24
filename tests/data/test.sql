@@ -1,8 +1,8 @@
-DROP DATABASE IF EXISTS DatabaseComponentTest;
-DROP DATABASE IF EXISTS Security;
+DROP SCHEMA IF EXISTS Security;
+DROP SCHEMA IF EXISTS DatabaseComponentTest;
 
-CREATE DATABASE DatabaseComponentTest;
-CREATE DATABASE Security;
+CREATE SCHEMA DatabaseComponentTest;
+CREATE SCHEMA Security;
 
 USE DatabaseComponentTest;
 
@@ -68,12 +68,13 @@ VALUES
     ('Test Article', 1);
 
 CREATE TABLE AddressDetails (
-    intAddressDetailsId INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    intAddressDetailsId INT UNSIGNED NOT NULL AUTO_INCREMENT,
     strAddressLineOne VARCHAR(255) NOT NULL ,
     strAddressLineTwo VARCHAR(255),
-    strCity VARCHAR(255) NOT NULL ,
-    strPostcode VARCHAR(255) NOT NULL ,
-    intUserId INT(11) unsigned NOT NULL ,
+    strCity VARCHAR(255) NOT NULL,
+    strPostcode VARCHAR(255) NOT NULL,
+    intUserId INT(11) unsigned NOT NULL,
+    PRIMARY KEY (intAddressDetailsId),
     FOREIGN KEY (intUserId) REFERENCES User(intUserId)
 );
 
@@ -81,6 +82,12 @@ INSERT INTO AddressDetails
     (strAddressLineOne, strAddressLineTwo, strCity, strPostcode, intUserId)
 VALUES
     ('1 Main Street', NULL, 'London', 'E1 1AB', 1);
+
+CREATE TABLE KeepEmpty (
+    intKeepEmptyId INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    strName VARCHAR(60) NOT NULL,
+    PRIMARY KEY (intKeepEmptyId)
+);
 
 USE Security;
 

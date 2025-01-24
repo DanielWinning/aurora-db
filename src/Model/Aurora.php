@@ -73,9 +73,9 @@ class Aurora
     }
 
     /**
-     * @return static[]|null
+     * @return Collection<int, static>|null
      */
-    public static function all(): array|null
+    public static function all(): Collection|null
     {
         $sql = sprintf('SELECT * FROM %s', self::getSchemaAndTableCombined());
 
@@ -88,7 +88,7 @@ class Aurora
      * @param string|null $orderBy
      * @param string|null $orderDirection
      *
-     * @return Collection<static>|null
+     * @return Collection<int, static>|null
      */
     public static function paginate(int $page = 1, int $perPage = 10, string $orderBy = null, string $orderDirection = null): null|Collection
     {
@@ -116,9 +116,7 @@ class Aurora
 
         if (!$result) return null;
 
-        if (is_array($result)) return new Collection($result);
-
-        return new Collection([$result]);
+        return $result;
     }
 
     /**
@@ -148,7 +146,11 @@ class Aurora
      */
     public static function find(int $id): static|null
     {
-        return self::executeQuery(self::getFindQueryString(), ['id' => $id]);
+        $results = self::executeQuery(self::getFindQueryString(), ['id' => $id]);
+
+        return $results && $results->first() instanceof static
+            ? $results->first()
+            : null;
     }
 
     /**
@@ -176,9 +178,11 @@ class Aurora
             self::getSchemaAndTableCombined(),
             $columnName
         );
-        $result = self::executeQuery($sql, ['value' => $value]);
+        $results = self::executeQuery($sql, ['value' => $value]);
 
-        return $result ?? null;
+        return $results && $results->first() instanceof static
+            ? $results->first()
+            : null;
     }
 
     /**
@@ -191,9 +195,11 @@ class Aurora
             self::getSchemaAndTableCombined(),
             static::getPrimaryIdentifierColumnName()
         );
-        $latest = self::executeQuery($sql);
+        $results = self::executeQuery($sql);
 
-        return $latest ?? null;
+        return $results && $results->first() instanceof static
+            ? $results->first()
+            : null;
     }
 
     /**
@@ -339,20 +345,43 @@ class Aurora
     /**
      * Executes the built-up query string and returns the result.
      *
-     * @return static|static[]|null
+     * @return Collection<int, static>|null
      */
-    public function get(): static|array|null
+    public function get(): Collection|null
     {
         return self::executeQuery(self::$queryString, self::$queryBindings);
     }
 
     /**
+     * @return static|null
+     */
+    public function getOne(): static|null
+    {
+        $results = self::executeQuery(self::$queryString, self::$queryBindings);
+
+        return self::getOneOrNull($results);
+    }
+
+    /**
+     * @param Collection<int, static>|null $queryResults
+     *
+     * @return static|null
+     */
+    private function getOneOrNull(?Collection $queryResults): static|null
+    {
+        return $queryResults && $queryResults->first() instanceof static
+            ? $queryResults->first()
+            : null;
+    }
+
+
+    /**
      * @param string $sql
      * @param ?array $params
      *
-     * @return static|array|null
+     * @return Collection<int, static>|null
      */
-    private static function executeQuery(string $sql, array $params = null): static|array|null
+    private static function executeQuery(string $sql, array $params = null): Collection|null
     {
         $query = static::getDatabaseConnection()->getConnection()->prepare($sql);
 
@@ -377,13 +406,9 @@ class Aurora
 
         if (!$result) return null;
 
-        if (count($result) === 1) {
-            return AuroraMapper::map($result[0], static::class);
-        }
-
-        return array_map(function(array $aurora) {
+        return new Collection(array_map(function(array $aurora) {
             return AuroraMapper::map($aurora, static::class);
-        }, $result);
+        }, $result));
     }
 
     /**
@@ -854,39 +879,6 @@ class Aurora
             self::getDatabaseConnection()->getConnection()->prepare($sql)->execute();
             self::debugQueryExecutionTime($startTime, $sql);
         }
-    }
-
-    /**
-     * @param array $associations
-     *
-     * @return $this
-     */
-    public function with(array $associations): static
-    {
-        foreach ($associations as $primaryAssociation => $secondaryAssociations) {
-            AuroraMapper::fetchAssociated($this, $primaryAssociation);
-
-            $associatedClassName = explode('\\', $primaryAssociation);
-            $associatedClassName = end($associatedClassName);
-
-            if (str_ends_with($associatedClassName, 'y')) {
-                $associatedClassName = substr($associatedClassName, 0, -1) . 'ie';
-            }
-
-            $associationMethod = sprintf(
-                'get%ss',
-                $associatedClassName
-            );
-            $associatedEntities = $this->{$associationMethod}();
-
-            foreach ($secondaryAssociations as $secondaryAssociation) {
-                foreach ($associatedEntities as $associatedEntity) {
-                    AuroraMapper::fetchAssociated($associatedEntity, $secondaryAssociation);
-                }
-            }
-        }
-
-        return $this;
     }
 
     /**

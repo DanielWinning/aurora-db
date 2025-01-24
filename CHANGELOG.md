@@ -7,11 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### Added
-- N/A
+- Added `Aurora::getOne` method to return a single object or `null`.
 
 ### Changed
 - `Aurora::with()` no longer takes a string array of FQCNs, instead uses the shape `array<string, array<int, string>>` 
 to allow fetching of further associated objects
+- `Aurora::get` now returns `static[]|null`, previously it returned `static[]|static|null`
 
 ### Deprecated
 - N/A
