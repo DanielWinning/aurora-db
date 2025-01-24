@@ -2,51 +2,31 @@
 
 namespace Luma\Tests\Unit;
 
-use Dotenv\Dotenv;
-use Luma\AuroraDatabase\DatabaseConnection;
-use Luma\AuroraDatabase\Model\Aurora;
 use Luma\AuroraDatabase\Utils\Collection;
-use Luma\Tests\Classes\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class CollectionTest extends TestCase
 {
     /**
      * @return void
-     *
-     * @throws \Exception
-     */
-    protected function setUp(): void
-    {
-        $dotenv = Dotenv::createImmutable(dirname(__DIR__) . '/data');
-        $dotenv->load();
-
-        $connection = new DatabaseConnection(
-            sprintf('mysql:host=%s;port=%d;', $_ENV['DATABASE_HOST'], $_ENV['DATABASE_PORT']),
-            $_ENV['DATABASE_USER'],
-            $_ENV['DATABASE_PASSWORD']
-        );
-        Aurora::setDatabaseConnection($connection);
-    }
-
-    /**
-     * @return void
-     */
-    public function testItCreatesCollection(): void
-    {
-        $collection = new Collection(['a', 1]);
-
-        $this->assertInstanceOf(Collection::class, $collection);
-    }
-
-    /**
-     * @return void
      */
     public function testGetIterator(): void
     {
-        $collection = new Collection(['a', 1]);
+        self::assertInstanceOf(\ArrayIterator::class, (new Collection(['a', 1]))->getIterator());
+    }
 
-        $this->assertInstanceOf(\ArrayIterator::class, $collection->getIterator());
+    /**
+     * @param Collection $collection
+     * @param int $index
+     * @param mixed $expected
+     *
+     * @return void
+     */
+    #[DataProvider('getDataProvider')]
+    public function testGet(Collection $collection, int $index, mixed $expected): void
+    {
+        self::assertEquals($expected, $collection->get($index));
     }
 
     /**
@@ -56,7 +36,6 @@ class CollectionTest extends TestCase
     {
         $collection = new Collection(['a', 1, 'hello', 'Test!']);
 
-        $this->assertEquals(1, $collection->get(1));
         $this->assertEquals('a', $collection->first());
         $this->assertEquals('Test!', $collection->last());
 
@@ -64,13 +43,11 @@ class CollectionTest extends TestCase
 
         $this->assertNull($collection->first());
         $this->assertNull($collection->last());
-        $this->assertNull($collection->get(0));
 
         $collection->add(1);
 
         $this->assertEquals(1, $collection->first());
         $this->assertEquals(1, $collection->last());
-        $this->assertEquals(1, $collection->get(0));
 
         $collection->remove(1);
 
@@ -83,40 +60,34 @@ class CollectionTest extends TestCase
      * @param mixed $expected
      *
      * @return void
-     *
-     * @dataProvider collectionSearchDataProvider
      */
+    #[DataProvider('collectionSearchDataProvider')]
     public function testFind(array $data, callable $searchMethod, mixed $expected): void
     {
-        $collection = new Collection($data);
-
-        $this->assertEquals($expected, $collection->find($searchMethod));
+        self::assertEquals($expected, (new Collection($data))->find($searchMethod));
     }
 
     /**
+     * @param array $data
+     *
      * @return void
      */
-    public function testToArray(): void
+    #[DataProvider('arrayProvider')]
+    public function testToArray(array $data): void
     {
-        $array = ['a' => 1,'b' => 2,'c' => 3];
-        $collection = new Collection($array);
-
-        $this->assertEquals($array, $collection->toArray());
+        self::assertEquals($data, (new Collection($data))->toArray());
     }
 
     /**
+     * @param Collection $collection
+     * @param bool $isEmpty
+     *
      * @return void
      */
-    public function testIsEmpty(): void
+    #[DataProvider('isEmptyDataProvider')]
+    public function testIsEmpty(Collection $collection, bool $isEmpty): void
     {
-        $collection = new Collection([]);
-
-        var_dump($collection->count(), $collection->isEmpty());
-        $this->assertTrue($collection->isEmpty());
-
-        $collection2 = new Collection(['a', 'b', 'c']);
-
-        $this->assertFalse($collection2->isEmpty());
+        self::assertEquals($isEmpty, $collection->isEmpty());
     }
 
     /**
@@ -169,6 +140,64 @@ class CollectionTest extends TestCase
                     return $item === 7;
                 },
                 'expected' => null,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, Collection|bool>>
+     */
+    public static function  isEmptyDataProvider(): array
+    {
+        return [
+            'No argument provided' => [
+                'collection' => new Collection(),
+                'isEmpty' => true,
+            ],
+            'Empty array provided' => [
+                'collection' => new Collection([]),
+                'isEmpty' => true,
+            ],
+            'Populated array provided' => [
+                'collection' => new Collection([1, 2, 3]),
+                'isEmpty' => false,
+            ],
+        ];
+    }
+
+    /**
+     * @return array[]
+     */
+    public static function getDataProvider(): array
+    {
+        return [
+            'Get by index returns null when data is empty' => [
+                'collection' => new Collection(),
+                'index' => 0,
+                'expected' => null,
+            ],
+            'Get by index returns correct index item' => [
+                'collection' => new Collection([1, '2', 3]),
+                'index' => 1,
+                'expected' => '2',
+            ],
+        ];
+    }
+
+    /**
+     * @return array[][]
+     */
+    public static function arrayProvider(): array
+    {
+        return [
+            'Mixed types array' => [
+                'data' => ['1', 0, false]
+            ],
+            'String array' => [
+                'data' => ['hello', 'world']
+            ],
+            'Associative array' => [
+                'data' => ['hello' => 'world']
             ],
         ];
     }
