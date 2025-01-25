@@ -50,6 +50,12 @@ In its simplest form, we can use the above `DatabaseConnection` instance to get 
 $pdo = $databaseConnection->getConnection();
 ```
 
+To make full use of Aurora DB, set the database connection:
+
+```php
+Aurora::setDatabaseConnection($databaseConnection);
+```
+
 This allows you to use `Aurora` models to interact with your database via a single shared connection.
 
 ### The `Aurora` Model
