@@ -168,7 +168,7 @@ class Aurora
         $columnAttribute = $reflectionProperty->getAttributes(Column::class)[0] ?? null;
 
         if (!$columnAttribute) {
-            throw new \Exception("Property {$property} does not exist or does not have a Column attribute.");
+            throw new \Exception("Property $property does not exist or does not have a Column attribute.");
         }
 
         $columnName = $columnAttribute->newInstance()->getName();
@@ -206,18 +206,28 @@ class Aurora
      * @param string[] $columns
      *
      * @return static
+     *
+     * @throws \Exception
      */
     public static function select(array $columns = ['*']): static
     {
         $columns = array_map(function (string $columnName) {
             return self::getColumnNameByReflection($columnName);
         }, $columns);
-        $primaryColumn = static::getPrimaryIdentifierColumnName();
 
-        if (!in_array('*', $columns) && !in_array($primaryColumn, $columns)) {
-            $columns[] = $primaryColumn;
+        if (in_array('*', $columns)) {
+            if (count($columns) > 1) {
+                throw new \Exception('When selecting all columns, you must not specify additional columns.');
+            }
+
+            $columns = [sprintf('%s.*', self::getSchemaAndTableCombined())];
+        } elseif (!in_array(static::getPrimaryIdentifierColumnName(), $columns)) {
+            $columns[] = sprintf('%s.%s', self::getSchemaAndTableCombined(), static::getPrimaryIdentifierColumnName());
         }
 
+        $columns = array_map(function (string $column) {
+            return self::getSchemaAndTableCombined() . '.' . $column;
+        }, $columns);
         $columns = implode(',', $columns);
 
         self::$queryString = sprintf('SELECT %s FROM %s', $columns, self::getSchemaAndTableCombined());
@@ -272,11 +282,11 @@ class Aurora
     /**
      * @param string $column
      * @param string $operator
-     * @param string|int|array $value
+     * @param string|int|array|bool $value
      *
      * @return static
      */
-    protected function where(string $column, string $operator, string|int|array $value): static
+    protected function where(string $column, string $operator, string|int|array|bool $value): static
     {
         if (str_contains(self::$queryString, 'WHERE')) {
             self::$queryString .= ' AND';
@@ -284,12 +294,13 @@ class Aurora
             self::$queryString .= ' WHERE';
         }
 
+        $schemaAndTable = static::getSchemaAndTableCombined();
         $column = self::getColumnNameByReflection($column);
 
-        self::$queryString .= " {$column} {$operator} ";
+        self::$queryString .= " $schemaAndTable.$column $operator ";
 
         if (is_string($value)) {
-            self::$queryString .= "'{$value}'";
+            self::$queryString .= "'$value'";
         } elseif (is_array($value)) {
             self::$queryString .= '(';
 
@@ -297,7 +308,7 @@ class Aurora
                 if (!is_numeric($key)) continue;
 
                 if (is_string($singleValue)) {
-                    self::$queryString .= "'{$singleValue}'";
+                    self::$queryString .= "'$singleValue'";
                 } else {
                     self::$queryString .= $singleValue;
                 }
@@ -308,6 +319,8 @@ class Aurora
             }
 
             self::$queryString .= ')';
+        } else if (is_bool($value)) {
+            self::$queryString .= (int) $value;
         } else {
             self::$queryString .= $value;
         }
@@ -325,7 +338,7 @@ class Aurora
     {
         $column = self::getColumnNameByReflection($column);
 
-        self::$queryString .= " ORDER BY {$column} {$direction}";
+        self::$queryString .= " ORDER BY $column $direction";
 
         return new static;
     }
@@ -360,6 +373,14 @@ class Aurora
         $results = self::executeQuery(self::$queryString, self::$queryBindings);
 
         return self::getOneOrNull($results);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSql(): string
+    {
+        return self::$queryString;
     }
 
     /**
