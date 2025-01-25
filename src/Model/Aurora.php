@@ -326,6 +326,18 @@ class Aurora
     }
 
     /**
+     * @param int $limit
+     *
+     * @return static
+     */
+    public function limit(int $limit): static
+    {
+        self::$queryString .= " LIMIT {$limit}";
+
+        return new static;
+    }
+
+    /**
      * @param string $column
      * @param string $direction
      *
@@ -336,18 +348,6 @@ class Aurora
         $column = self::getColumnNameByReflection($column);
 
         self::$queryString .= " ORDER BY $column $direction";
-
-        return new static;
-    }
-
-    /**
-     * @param int $limit
-     *
-     * @return static
-     */
-    public function limit(int $limit): static
-    {
-        self::$queryString .= " LIMIT {$limit}";
 
         return new static;
     }
@@ -367,9 +367,7 @@ class Aurora
      */
     public function getOne(): static|null
     {
-        $results = self::executeQuery(self::$queryString, self::$queryBindings);
-
-        return self::getOneOrNull($results);
+        return self::getOneOrNull(self::executeQuery(self::$queryString, self::$queryBindings));
     }
 
     /**
