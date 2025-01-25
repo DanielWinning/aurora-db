@@ -219,18 +219,16 @@ class Aurora
             if (count($columns) > 1) {
                 throw new \Exception('When selecting all columns, you must not specify additional columns.');
             }
-
-            $columns = [sprintf('%s.*', self::getSchemaAndTableCombined())];
         } elseif (!in_array(static::getPrimaryIdentifierColumnName(), $columns)) {
-            $columns[] = sprintf('%s.%s', self::getSchemaAndTableCombined(), static::getPrimaryIdentifierColumnName());
+            $columns[] = sprintf('t1.%s', static::getPrimaryIdentifierColumnName());
         }
 
         $columns = array_map(function (string $column) {
-            return self::getSchemaAndTableCombined() . '.' . $column;
+            return 't1.' . $column;
         }, $columns);
         $columns = implode(',', $columns);
 
-        self::$queryString = sprintf('SELECT %s FROM %s', $columns, self::getSchemaAndTableCombined());
+        self::$queryString = sprintf('SELECT %s FROM %s t1', $columns, self::getSchemaAndTableCombined());
 
         return new static;
     }
@@ -294,10 +292,9 @@ class Aurora
             self::$queryString .= ' WHERE';
         }
 
-        $schemaAndTable = static::getSchemaAndTableCombined();
         $column = self::getColumnNameByReflection($column);
 
-        self::$queryString .= " $schemaAndTable.$column $operator ";
+        self::$queryString .= " t1.$column $operator ";
 
         if (is_string($value)) {
             self::$queryString .= "'$value'";
