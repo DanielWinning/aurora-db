@@ -77,9 +77,9 @@ class Aurora
      */
     public static function all(): array|null
     {
-        $sql = sprintf('SELECT * FROM %s', static::getSchemaAndTableCombined());
+        $sql = sprintf('SELECT * FROM %s', self::getSchemaAndTableCombined());
 
-        return static::executeQuery($sql);
+        return self::executeQuery($sql);
     }
 
     /**
@@ -96,7 +96,7 @@ class Aurora
 
         $sql = sprintf(
             'SELECT * FROM %s',
-            static::getSchemaAndTableCombined()
+            self::getSchemaAndTableCombined()
         );
 
         if ($orderBy) {
@@ -112,7 +112,7 @@ class Aurora
         }
 
         $sql = sprintf('%s LIMIT %d OFFSET %d', $sql, $perPage, $offset);
-        $result = static::executeQuery($sql);
+        $result = self::executeQuery($sql);
 
         if (!$result) return null;
 
@@ -148,7 +148,7 @@ class Aurora
      */
     public static function find(int $id): static|null
     {
-        return static::executeQuery(static::getFindQueryString(), ['id' => $id]);
+        return self::executeQuery(self::getFindQueryString(), ['id' => $id]);
     }
 
     /**
@@ -173,10 +173,10 @@ class Aurora
 
         $sql = sprintf(
             'SELECT * FROM %s WHERE %s = :value LIMIT 1',
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             $columnName
         );
-        $result = static::executeQuery($sql, ['value' => $value]);
+        $result = self::executeQuery($sql, ['value' => $value]);
 
         return $result ?? null;
     }
@@ -188,10 +188,10 @@ class Aurora
     {
         $sql = sprintf(
             'SELECT * FROM %s ORDER BY %s DESC LIMIT 1',
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             static::getPrimaryIdentifierColumnName()
         );
-        $latest = static::executeQuery($sql);
+        $latest = self::executeQuery($sql);
 
         return $latest ?? null;
     }
@@ -204,7 +204,7 @@ class Aurora
     public static function select(array $columns = ['*']): static
     {
         $columns = array_map(function (string $columnName) {
-            return static::getColumnNameByReflection($columnName);
+            return self::getColumnNameByReflection($columnName);
         }, $columns);
         $primaryColumn = static::getPrimaryIdentifierColumnName();
 
@@ -214,7 +214,7 @@ class Aurora
 
         $columns = implode(',', $columns);
 
-        self::$queryString = sprintf('SELECT %s FROM %s', $columns, static::getSchemaAndTableCombined());
+        self::$queryString = sprintf('SELECT %s FROM %s', $columns, self::getSchemaAndTableCombined());
 
         return new static;
     }
@@ -278,7 +278,7 @@ class Aurora
             self::$queryString .= ' WHERE';
         }
 
-        $column = static::getColumnNameByReflection($column);
+        $column = self::getColumnNameByReflection($column);
 
         self::$queryString .= " {$column} {$operator} ";
 
@@ -317,7 +317,7 @@ class Aurora
      */
     public function orderBy(string $column, string $direction = 'ASC'): static
     {
-        $column = static::getColumnNameByReflection($column);
+        $column = self::getColumnNameByReflection($column);
 
         self::$queryString .= " ORDER BY {$column} {$direction}";
 
@@ -343,7 +343,7 @@ class Aurora
      */
     public function get(): static|array|null
     {
-        return static::executeQuery(self::$queryString, self::$queryBindings);
+        return self::executeQuery(self::$queryString, self::$queryBindings);
     }
 
     /**
@@ -393,7 +393,7 @@ class Aurora
     {
         return sprintf(
             "SELECT * FROM %s WHERE %s = :id",
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             static::getPrimaryIdentifierColumnName()
         );
     }
@@ -441,7 +441,7 @@ class Aurora
      */
     public static function getPrimaryIdentifierPropertyName(): string|null
     {
-        $primaryIdentifier = static::getPrimaryIdentifier();
+        $primaryIdentifier = self::getPrimaryIdentifier();
 
         return $primaryIdentifier ? $primaryIdentifier[0] : null;
     }
@@ -454,7 +454,7 @@ class Aurora
      */
     public static function getPrimaryIdentifierColumnName(): string|null
     {
-        $primaryIdentifier = static::getPrimaryIdentifier();
+        $primaryIdentifier = self::getPrimaryIdentifier();
 
         return $primaryIdentifier ? $primaryIdentifier[1] : null;
     }
@@ -493,7 +493,7 @@ class Aurora
      */
     public static function getSchema(): string
     {
-        return static::getClassAttribute(Schema::class, 'schema');
+        return self::getClassAttribute(Schema::class, 'schema');
     }
 
     /**
@@ -501,7 +501,7 @@ class Aurora
      */
     public static function getTable(): string
     {
-        $table = static::getClassAttribute(Table::class, 'table');
+        $table = self::getClassAttribute(Table::class, 'table');
 
         if (empty($table)) {
             $className = explode('\\', static::class);
@@ -571,7 +571,7 @@ class Aurora
     {
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             implode(',', $columns),
             implode(',', $values)
         );
@@ -621,6 +621,8 @@ class Aurora
 
         foreach ($reflector->getProperties() as $property) {
             $auroraCollectionAttribute = $property->getAttributes(AuroraCollection::class)[0] ?? null;
+
+            if (!$property->getType() instanceof \ReflectionNamedType) continue;
 
             if ($auroraCollectionAttribute && $property->getType()->getName() === Collection::class) {
                 $auroraCollectionAttribute = $auroraCollectionAttribute->newInstance();
@@ -787,7 +789,7 @@ class Aurora
 
         $sql = sprintf(
             'UPDATE %s SET %s WHERE %s = :id',
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             implode(', ', $columns),
             static::getPrimaryIdentifierColumnName()
         );
@@ -809,7 +811,7 @@ class Aurora
 
         $sql = sprintf(
             'DELETE FROM %s WHERE %s = :id',
-            static::getSchemaAndTableCombined(),
+            self::getSchemaAndTableCombined(),
             static::getPrimaryIdentifierColumnName()
         );
 

@@ -17,7 +17,7 @@ class AuroraMapper
      * @param array $fetchData
      * @param string $mapToClass
      *
-     * @return ?array
+     * @return ?Aurora
      */
     public static function map(array $fetchData, string $mapToClass): ?Aurora
     {
@@ -78,7 +78,7 @@ class AuroraMapper
         $propertyType = $property->getType();
 
         if ($propertyType) {
-            if (!$propertyType->isBuiltin()) {
+            if ($propertyType instanceof \ReflectionNamedType && !$propertyType->isBuiltin()) {
                 $propertyClass = $propertyType->getName();
                 $implementsDateTimeInterface = in_array(\DateTimeInterface::class, class_implements($propertyClass));
 
@@ -122,6 +122,9 @@ class AuroraMapper
             if (!$attribute) continue;
 
             $propertyType = $property->getType();
+
+            if (!$propertyType instanceof \ReflectionNamedType) continue;
+
             $propertyClass = $propertyType->getName();
             $attributeInstance = $attribute->newInstance();
 
