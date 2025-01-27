@@ -859,8 +859,27 @@ class Aurora
      */
     public function with(array $associations): static
     {
-        foreach ($associations as $association) {
-            AuroraMapper::fetchAssociated($this, $association);
+        foreach ($associations as $primaryAssociation => $secondaryAssociations) {
+            AuroraMapper::fetchAssociated($this, $primaryAssociation);
+
+            $associatedClassName = explode('\\', $primaryAssociation);
+            $associatedClassName = end($associatedClassName);
+
+            if (str_ends_with($associatedClassName, 'y')) {
+                $associatedClassName = substr($associatedClassName, 0, -1) . 'ie';
+            }
+
+            $associationMethod = sprintf(
+                'get%ss',
+                $associatedClassName
+            );
+            $associatedEntities = $this->{$associationMethod}();
+
+            foreach ($secondaryAssociations as $secondaryAssociation) {
+                foreach ($associatedEntities as $associatedEntity) {
+                    AuroraMapper::fetchAssociated($associatedEntity, $secondaryAssociation);
+                }
+            }
         }
 
         return $this;
