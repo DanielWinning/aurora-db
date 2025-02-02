@@ -94,7 +94,7 @@ class AuroraMapper
                 } elseif ($implementsDateTimeInterface || $propertyClass === \DateTimeInterface::class) {
                     $dateTime = is_null($fetchData[$columnName])
                         ? null
-                        : \DateTime::createFromFormat($fetchData[$columnName]);
+                        : new \DateTime($fetchData[$columnName]);
                     $property->setValue($aurora, $dateTime);
                 }
             } else {
