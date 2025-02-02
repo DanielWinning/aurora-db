@@ -869,7 +869,6 @@ class Aurora
                 $associatedClassName = substr($associatedClassName, 0, -1) . 'ie';
             }
 
-
             $associationMethod = sprintf(
                 'get%ss',
                 $associatedClassName
